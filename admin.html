@@ -354,8 +354,9 @@
       }
 
       // Login successful
-      currentUser = user;
-      showDashboard();
+currentUser = user;
+saveSession();
+showDashboard();
 
     } catch(e) {
       notify('loginNotify', 'Villa við innskráningu. Reyndu aftur.', 'error');
@@ -396,9 +397,10 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ Notandi: pendingEmail })
       });
-      currentUser = await res.json();
-      document.getElementById('setPasswordPanel').style.display = 'none';
-      showDashboard();
+currentUser = await res.json();
+saveSession();
+document.getElementById('setPasswordPanel').style.display = 'none';
+showDashboard();
 
     } catch(e) {
       notify('setPasswordNotify', 'Villa við að vista lykilorð.', 'error');
@@ -406,8 +408,9 @@
     }
   }
 
-  function logout() {
-    currentUser = null;
+function logout() {
+  currentUser = null;
+  sessionStorage.removeItem('currentUser');
     pendingEmail = null;
     document.getElementById('dashboard').style.display = 'none';
     document.getElementById('loginPanel').style.display = 'block';
@@ -821,6 +824,21 @@ async function confirmReset() {
     console.error(e);
   }
 }
+  // Save session on login
+function saveSession() {
+  sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+}
+
+// Restore session on page load
+function restoreSession() {
+  const saved = sessionStorage.getItem('currentUser');
+  if (saved) {
+    currentUser = JSON.parse(saved);
+    showDashboard();
+  }
+}
+
+restoreSession();
 </script>
 </body>
 </html>
