@@ -473,8 +473,9 @@
     if (tab === 'notendur') loadNotendur();
   }
 
-  async function loadTilkynningar() {
-    const panel = document.getElementById('panel-tilkynningar');
+async function loadTilkynningar() {
+  if (!currentUser) return;
+  const panel = document.getElementById('panel-tilkynningar');
     panel.innerHTML = '<p style="padding:20px;">Hleður tilkynningar...</p>';
 
     try {
@@ -486,7 +487,9 @@
       const data = await res.json();
       let items = data.value || data;
 
-      const role = currentUser.Hlutverk?.Value || currentUser.Hlutverk || '';
+      const role = currentUser?.Hlutverk?.Value || currentUser?.Hlutverk || '';
+      const verslun = currentUser?.Verslun || '';
+      const vidbotar = currentUser?.Vi_x00f0_b_x00f3_tarVerslun || '';
       const verslun = currentUser.Verslun || '';
       const vidbotar = currentUser.Vi_x00f0_b_x00f3_tarVerslun || '';
 
