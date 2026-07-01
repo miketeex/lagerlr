@@ -564,7 +564,7 @@ async function loadTilkynningar() {
     let items = window._allTilkynningar || [];
     if (verslun) items = items.filter(i => i.Verslun === verslun);
     if (stada) items = items.filter(i => i.Sta_x00f0_a?.Value === stada || i.Sta_x00f0_a === stada);
-    if (astæda) items = items.filter(i => i._x00c1_st_x00e6__x00f0_a?.Value === astæda || i.Astæda === astæda);
+    if (astæda) items = items.filter(i => i.OData__x00c1_st_x00e6__x00f0_a?.Value === astæda || i.Astæda === astæda);
     renderTilkynningar(items);
   }
 
@@ -579,7 +579,7 @@ async function loadTilkynningar() {
 
     tbody.innerHTML = items.map(r => {
       const stada = r.Sta_x00f0_a?.Value || r.Sta_x00f0_a || '';
-      const astæda = r._x00c1_st_x00e6__x00f0_a?.Value || r.Astæda || '';
+      const astæda = r.OData__x00c1_st_x00e6__x00f0_a?.Value || r.Astæda || '';
       const dagur = r.Dagsetning?.split('T')[0] || '';
       return `<tr>
         <td>${r.Title || ''}</td>
@@ -668,7 +668,7 @@ async function loadStats() {
       // By ástæða
       const byAstæda = {};
       items.forEach(i => {
-        const a = i._x00c1_st_x00e6__x00f0_a?.Value || i.Astæda || 'Óþekkt';
+        const a = i.OData__x00c1_st_x00e6__x00f0_a?.Value || i.Astæda || 'Óþekkt';
         byAstæda[a] = (byAstæda[a] || 0) + 1;
       });
 
