@@ -426,7 +426,7 @@
 
     const tabs = [];
     tabs.push({ id: 'tilkynningar', label: 'Tilkynningar' });
-    if (['Lagerstjóri', 'Skrifstofa', 'Master'].includes(role)) tabs.push({ id: 'stats', label: 'Tölfræði' });
+    if (['Verslunarstjóri', 'Lagerstjóri', 'Skrifstofa', 'Master'].includes(role)) tabs.push({ id: 'stats', label: 'Tölfræði' });
     if (role === 'Master') tabs.push({ id: 'notendur', label: 'Notendur' });
 
     tabs.forEach((tab, i) => {
