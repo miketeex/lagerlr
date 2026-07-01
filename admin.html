@@ -717,7 +717,52 @@ function renderRedFlags(items) {
         <h3 style="color:var(--elko-dark); margin:24px 0 16px;">Eftir verslun</h3>
         <div class="stats-grid">
           ${Object.entries(byVerslun).map(([k, v]) => `<div class="stat-card"><div class="number">${v}</div><div class="label">${k}</div></div>`).join('')}
-        </div>`;
+        </div>
+        <h3 style="color:var(--elko-dark); margin:24px 0 16px;">📈 Vaxandi vandamál</h3>
+        ${(() => {
+          const watchAstæður = ['Gallað', 'Þjófnaður'];
+          const thisMonthItems = items.filter(i => (i.Dagsetning || '').startsWith(thisMonth) && watchAstæður.includes(i.OData__x00c1_st_x00e6__x00f0_a?.Value || i.Astæda || ''));
+          const lastMonthItems = items.filter(i => (i.Dagsetning || '').startsWith(lastMonth) && watchAstæður.includes(i.OData__x00c1_st_x00e6__x00f0_a?.Value || i.Astæda || ''));
+
+          const thisCounts = {};
+          thisMonthItems.forEach(i => {
+            const key = (i.V_x00f6_run_x00fa_mer || i.Vorunumer || '') + '|' + (i.Vara || '');
+            thisCounts[key] = (thisCounts[key] || 0) + 1;
+          });
+
+          const lastCounts = {};
+          lastMonthItems.forEach(i => {
+            const key = (i.V_x00f6_run_x00fa_mer || i.Vorunumer || '') + '|' + (i.Vara || '');
+            lastCounts[key] = (lastCounts[key] || 0) + 1;
+          });
+
+          const alerts = Object.entries(thisCounts)
+            .map(([key, thisCount]) => {
+              const [vorunumer, vara] = key.split('|');
+              const lastCount = lastCounts[key] || 0;
+              const trending = thisCount > lastCount;
+              const persistent = thisCount === lastCount && thisCount >= 2;
+              return { vorunumer, vara, thisCount, lastCount, trending, persistent };
+            })
+            .filter(x => x.trending || x.persistent)
+            .sort((a, b) => b.thisCount - a.thisCount);
+
+          if (!alerts.length) return '<p style="color:#666; font-size:13px; padding:8px 0;">Engin vaxandi vandamál fundust þennan mánuð.</p>';
+
+          return `<div style="display:flex; flex-direction:column; gap:8px;">
+            ${alerts.map(a => `
+              <div style="background:white; border-radius:8px; padding:14px 16px; box-shadow:0 2px 6px rgba(0,0,0,0.08); border-left:4px solid ${a.trending ? '#c62828' : '#f57f17'}; display:flex; align-items:center; justify-content:space-between;">
+                <div>
+                  <div style="font-weight:700; font-size:14px; color:var(--elko-dark);">${a.trending ? '🔴' : '🟡'} ${a.vorunumer} — ${a.vara}</div>
+                  <div style="font-size:12px; color:#666; margin-top:2px;">Þessi mánuður: ${a.thisCount} tilkynningar · Síðasti mánuður: ${a.lastCount}</div>
+                </div>
+                <div style="font-size:11px; font-weight:700; color:${a.trending ? '#c62828' : '#f57f17'}; text-align:right;">
+                  ${a.trending ? '▲ Vaxandi' : '⚠️ Viðvarandi'}
+                </div>
+              </div>
+            `).join('')}
+          </div>`;
+        })()}`;
 
     } catch(e) {
       panel.innerHTML = '<p style="padding:20px; color:red;">Villa við að sækja tölfræði.</p>';
