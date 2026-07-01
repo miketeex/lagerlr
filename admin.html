@@ -438,8 +438,148 @@
   }
 
   // Placeholder functions — Part 2 will fill these in
-  async function loadTilkynningar() {
-    document.getElementById('panel-tilkynningar').innerHTML = '<p style="padding:20px;">Hleður tilkynningar...</p>';
+async function loadTilkynningar() {
+    const panel = document.getElementById('panel-tilkynningar');
+    panel.innerHTML = '<p style="padding:20px;">Hleður tilkynningar...</p>';
+
+    try {
+      const res = await fetch(FLOW_TILKYNNINGAR, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ApiKey: API_KEY })
+      });
+      const data = await res.json();
+      let items = data.value || data;
+
+      // Filter by role
+      const role = currentUser.Hlutverk?.Value || currentUser.Hlutverk || '';
+      const verslun = currentUser.Verslun || '';
+      const vidbotar = currentUser.Vi_x00f0_b_x00f3_tarVerslun || '';
+
+      if (role === 'Verslunarstjóri') {
+        items = items.filter(i => i.Verslun === verslun || i.Verslun === vidbotar);
+      } else if (role === 'Lagerstjóri') {
+        items = items.filter(i => i.Verslun === verslun);
+      }
+      // Skrifstofa and Master see all
+
+      panel.innerHTML = `
+        <div class="elko-filters">
+          <select id="filterVerslun" onchange="filterTilkynningar()">
+            <option value="">Allar verslanir</option>
+            <option>ELKO Lindir</option>
+            <option>ELKO Smáralind</option>
+            <option>ELKO Skeifan</option>
+            <option>ELKO Grandi</option>
+            <option>ELKO Akureyri</option>
+            <option>ELKO Flugstöð</option>
+          </select>
+          <select id="filterStada" onchange="filterTilkynningar()">
+            <option value="">Allar stöður</option>
+            <option>Ný</option>
+            <option>Í vinnslu</option>
+            <option>Lokið</option>
+          </select>
+          <select id="filterAstæda" onchange="filterTilkynningar()">
+            <option value="">Allar ástæður</option>
+            <option>Gallað</option>
+            <option>Ósöluhæft</option>
+            <option>Þjófnaður</option>
+            <option>Lagerleiðrétting</option>
+          </select>
+          <button class="elko-btn elko-btn-sm" onclick="loadTilkynningar()">🔄 Uppfæra</button>
+        </div>
+        <div class="elko-table-wrap">
+          <table id="tilkynningarTable">
+            <thead>
+              <tr>
+                <th>Tilvísun</th>
+                <th>Verslun</th>
+                <th>Vörunúmer</th>
+                <th>Vara</th>
+                <th>Ástæða</th>
+                <th>Lýsing</th>
+                <th>Tilkynnir</th>
+                <th>Dagsetning</th>
+                <th>Staða</th>
+                ${['Lagerstjóri', 'Master'].includes(role) ? '<th>Aðgerð</th>' : ''}
+              </tr>
+            </thead>
+            <tbody id="tilkynningarBody"></tbody>
+          </table>
+        </div>`;
+
+      window._allTilkynningar = items;
+      renderTilkynningar(items);
+
+    } catch(e) {
+      panel.innerHTML = '<p style="padding:20px; color:red;">Villa við að sækja tilkynningar.</p>';
+      console.error(e);
+    }
+  }
+
+  function filterTilkynningar() {
+    const verslun = document.getElementById('filterVerslun').value;
+    const stada = document.getElementById('filterStada').value;
+    const astæda = document.getElementById('filterAstæda').value;
+
+    let items = window._allTilkynningar || [];
+    if (verslun) items = items.filter(i => i.Verslun === verslun);
+    if (stada) items = items.filter(i => i.Sta_x00f0_a?.Value === stada || i.Sta_x00f0_a === stada);
+    if (astæda) items = items.filter(i => i._x00c1_st_x00e6__x00f0_a?.Value === astæda || i.Astæda === astæda);
+    renderTilkynningar(items);
+  }
+
+  function renderTilkynningar(items) {
+    const tbody = document.getElementById('tilkynningarBody');
+    const role = currentUser.Hlutverk?.Value || currentUser.Hlutverk || '';
+
+    if (!items.length) {
+      tbody.innerHTML = '<tr><td colspan="10">Engar tilkynningar fundust.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = items.map(r => {
+      const stada = r.Sta_x00f0_a?.Value || r.Sta_x00f0_a || '';
+      const astæda = r._x00c1_st_x00e6__x00f0_a?.Value || r.Astæda || '';
+      const dagur = r.Dagsetning?.split('T')[0] || '';
+      return `<tr>
+        <td>${r.Title || ''}</td>
+        <td>${r.Verslun || ''}</td>
+        <td>${r.V_x00f6_run_x00fa_mer || r.Vorunumer || ''}</td>
+        <td>${r.Vara || ''}</td>
+        <td>${astæda}</td>
+        <td style="max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${r.L_x00fd_sing || r.Lysing || ''}">${r.L_x00fd_sing || r.Lysing || ''}</td>
+        <td>${r.Tilkynnir || ''}</td>
+        <td>${dagur}</td>
+        <td><span class="stada-badge stada-${stada.replace(' ', '.')}">${stada}</span></td>
+        ${['Lagerstjóri', 'Master'].includes(role) ? `
+        <td>
+          <select onchange="updateStada(${r.ID}, this.value)" style="padding:4px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px;">
+            <option value="">-- Breyta --</option>
+            <option value="Ný">Ný</option>
+            <option value="Í vinnslu">Í vinnslu</option>
+            <option value="Lokið">Lokið</option>
+          </select>
+        </td>` : ''}
+      </tr>`;
+    }).join('');
+  }
+
+  async function updateStada(id, stada) {
+    if (!stada) return;
+    try {
+      await fetch(FLOW_UPPFAERA_STODU, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ApiKey: API_KEY, ID: id, Stada: stada })
+      });
+      notify('dashNotify', 'Staða uppfærð!', 'success');
+      loadTilkynningar();
+    } catch(e) {
+      notify('dashNotify', 'Villa við að uppfæra stöðu.', 'error');
+      console.error(e);
+    }
   }
 
   async function loadStats() {
