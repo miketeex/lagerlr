@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ELKO Lagerleiðrétting — Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --elko-green: #638b2c;
+      --elko-dark: #00126b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Open Sans', sans-serif; background: #f9f9f9; }
+
+    .elko-header {
+      background: var(--elko-dark);
+      color: white;
+      padding: 20px 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .elko-header-left { display: flex; flex-direction: column; }
+    .elko-header img { height: 32px; display: block; margin-bottom: 4px; }
+
+    .elko-btn {
+      background: var(--elko-green);
+      color: white;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: 'Open Sans', sans-serif;
+    }
+
+    .elko-btn:hover { background: #4e6e22; }
+    .elko-btn-secondary { background: #999; }
+    .elko-btn-secondary:hover { background: #777; }
+    .elko-btn-danger { background: #c62828; }
+    .elko-btn-danger:hover { background: #a01010; }
+    .elko-btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 4px; }
+
+    .elko-notify {
+      padding: 12px 20px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      display: none;
+    }
+
+    .elko-notify.success { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; display: block; }
+    .elko-notify.error { background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; display: block; }
+
+    /* LOGIN */
+    .login-wrap {
+      max-width: 400px;
+      margin: 80px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .login-wrap h2 { color: var(--elko-dark); margin-bottom: 20px; }
+
+    .elko-field { margin-bottom: 16px; }
+    .elko-field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #333; }
+    .elko-field input, .elko-field select {
+      width: 100%;
+      padding: 10px;
+      border: 1.5px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: 'Open Sans', sans-serif;
+    }
+
+    .elko-field input:focus, .elko-field select:focus {
+      border-color: var(--elko-dark);
+      outline: none;
+    }
+
+    /* DASHBOARD */
+    .dashboard { display: none; }
+    .elko-container { max-width: 1100px; margin: 30px auto; padding: 0 20px 40px 20px; }
+
+    .elko-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .elko-tab {
+      padding: 10px 24px;
+      border-radius: 6px;
+      border: 2px solid var(--elko-dark);
+      background: white;
+      color: var(--elko-dark);
+      cursor: pointer;
+      font-family: 'Open Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .elko-tab.active { background: var(--elko-dark); color: white; }
+
+    .elko-panel { display: none; }
+    .elko-panel.active { display: block; }
+
+    .elko-table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    th {
+      background: var(--elko-dark);
+      color: white;
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    td {
+      padding: 10px 16px;
+      font-size: 13px;
+      border-bottom: 1px solid #eee;
+      vertical-align: middle;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f5f5f5; }
+
+    .stada-badge {
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .stada-Ný { background: #e3f2fd; color: #1565c0; }
+    .stada-Í.vinnslu { background: #fff3e0; color: #e65100; }
+    .stada-Lokið { background: #e8f5e9; color: #2e7d32; }
+
+    .elko-filters {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .elko-filters select, .elko-filters input {
+      padding: 8px 12px;
+      border: 1.5px solid var(--elko-dark);
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: 'Open Sans', sans-serif;
+    }
+
+    .user-info {
+      font-size: 13px;
+      color: rgba(255,255,255,0.8);
+      margin-top: 4px;
+    }
+
+    /* STATS */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    .stat-card .number { font-size: 32px; font-weight: 700; color: var(--elko-dark); }
+    .stat-card .label { font-size: 13px; color: #666; margin-top: 4px; }
+  </style>
+</head>
+<body>
+
+<div class="elko-header">
+  <div class="elko-header-left">
+    <img src="images/ELKO_logo_SVG.svg" alt="ELKO">
+    <div style="font-size:10px; font-weight:400; opacity:0.8; letter-spacing:1px; text-transform:uppercase;">Lager</div>
+    <div style="font-size:20px; font-weight:700;">Lagerleiðrétting — Stjórnborð</div>
+  </div>
+  <div id="headerUser" style="display:none; text-align:right;">
+    <div class="user-info" id="headerUserName"></div>
+    <div class="user-info" id="headerUserRole"></div>
+    <button class="elko-btn elko-btn-sm" style="margin-top:8px; background:rgba(255,255,255,0.2);" onclick="logout()">Útskrá</button>
+  </div>
+</div>
+
+<!-- LOGIN PANEL -->
+<div id="loginPanel">
+  <div class="login-wrap">
+    <h2>Innskráning</h2>
+    <div id="loginNotify" class="elko-notify"></div>
+    <div class="elko-field">
+      <label>Netfang</label>
+      <input type="email" id="loginEmail" placeholder="netfang@elko.is" onkeydown="if(event.key==='Enter') login()">
+    </div>
+    <div class="elko-field">
+      <label>Lykilorð</label>
+      <input type="password" id="loginPassword" placeholder="Lykilorð" onkeydown="if(event.key==='Enter') login()">
+    </div>
+    <button class="elko-btn" style="width:100%;" onclick="login()">Innskrá</button>
+  </div>
+</div>
+
+<!-- SET PASSWORD PANEL (first login) -->
+<div id="setPasswordPanel" style="display:none;">
+  <div class="login-wrap">
+    <h2>Búðu til lykilorð</h2>
+    <p style="font-size:13px; color:#666; margin-bottom:20px;">Þetta er fyrsta innskráning þín — veldu lykilorð.</p>
+    <div id="setPasswordNotify" class="elko-notify"></div>
+    <div class="elko-field">
+      <label>Nýtt lykilorð</label>
+      <input type="password" id="newPassword1" placeholder="Lykilorð">
+    </div>
+    <div class="elko-field">
+      <label>Staðfestu lykilorð</label>
+      <input type="password" id="newPassword2" placeholder="Lykilorð aftur">
+    </div>
+    <button class="elko-btn" style="width:100%;" onclick="setPassword()">Vista lykilorð</button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dashboard" id="dashboard">
+  <div class="elko-container">
+    <div id="dashNotify" class="elko-notify"></div>
+    <div class="elko-tabs" id="tabBar"></div>
+    <div id="panelContainer"></div>
+  </div>
+</div>
+
+<script>
+  const API_KEY = 'Elko-Bankinn-2026-Karamella';
+  const FLOW_NOTANDI = 'https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/d0039fe1eb5e4016a4aa244f62ca4a61/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=0L3xVMvbAaY5KOIrKAgjjUbpJdn0OSusqITDYaAArD4';
+  const FLOW_LYKILORD = 'https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/9c560b65cbca4d948de93b3598c509b3/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=wRjJMB9d5JJiLw21pNxmvGOJ2XqMDXc8r4o8n3bfXY8';
+  const FLOW_NYR_NOTANDI = 'https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/01484e7be9184e3e9953dac3839df641/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ddG8cuuVhdPyHKIF4R97bd3fvriiuajobLuJ-Y7r8zQ';
+  const FLOW_TILKYNNINGAR = 'https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/331426e4fade487283995157e82d887b/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=L5iZmz5MwuMJhIx6lD5tR_rwn_nS0lMPAAJzE9IBbUA';
+  const FLOW_UPPFAERA_STODU = 'https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/cccfb4d7f0a04cc68c58f577821be76b/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=R47t77wnCwbRNjFFkYQHYlvZ9dqJ0DqsiVmny7zklnU';
+
+  let currentUser = null;
+  let pendingEmail = null;
+
+  // SHA-256 hashing
+  async function hashPassword(password) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    const hash = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  function notify(panelId, msg, type) {
+    const el = document.getElementById(panelId);
+    el.textContent = msg;
+    el.className = 'elko-notify ' + type;
+    setTimeout(() => el.className = 'elko-notify', 4000);
+  }
+
+  async function login() {
+    const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+    const password = document.getElementById('loginPassword').value;
+
+    if (!email || !password) {
+      notify('loginNotify', 'Fylltu inn netfang og lykilorð.', 'error');
+      return;
+    }
+
+    try {
+      const res = await fetch(FLOW_NOTANDI, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ Notandi: email })
+      });
+      const user = await res.json();
+
+      if (!user || !user.Title) {
+        notify('loginNotify', 'Notandi ekki fundinn.', 'error');
+        return;
+      }
+
+      // First login - no password set yet
+      if (!user.LykilordSett) {
+        pendingEmail = email;
+        document.getElementById('loginPanel').style.display = 'none';
+        document.getElementById('setPasswordPanel').style.display = 'block';
+        return;
+      }
+
+      // Verify password
+      const hash = await hashPassword(password);
+      if (hash !== user.Lykilord) {
+        notify('loginNotify', 'Rangt lykilorð.', 'error');
+        return;
+      }
+
+      // Login successful
+      currentUser = user;
+      showDashboard();
+
+    } catch(e) {
+      notify('loginNotify', 'Villa við innskráningu. Reyndu aftur.', 'error');
+      console.error(e);
+    }
+  }
+
+  async function setPassword() {
+    const p1 = document.getElementById('newPassword1').value;
+    const p2 = document.getElementById('newPassword2').value;
+
+    if (!p1 || !p2) {
+      notify('setPasswordNotify', 'Fylltu inn lykilorð.', 'error');
+      return;
+    }
+
+    if (p1 !== p2) {
+      notify('setPasswordNotify', 'Lykilorðin eru ekki eins.', 'error');
+      return;
+    }
+
+    if (p1.length < 8) {
+      notify('setPasswordNotify', 'Lykilorð verður að vera að minnsta kosti 8 stafir.', 'error');
+      return;
+    }
+
+    try {
+      const hash = await hashPassword(p1);
+      await fetch(FLOW_LYKILORD, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ Notandi: pendingEmail, Lykilord: hash })
+      });
+
+      // Now fetch full user and login
+      const res = await fetch(FLOW_NOTANDI, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ Notandi: pendingEmail })
+      });
+      currentUser = await res.json();
+      document.getElementById('setPasswordPanel').style.display = 'none';
+      showDashboard();
+
+    } catch(e) {
+      notify('setPasswordNotify', 'Villa við að vista lykilorð.', 'error');
+      console.error(e);
+    }
+  }
+
+  function logout() {
+    currentUser = null;
+    pendingEmail = null;
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('loginPanel').style.display = 'block';
+    document.getElementById('headerUser').style.display = 'none';
+    document.getElementById('loginEmail').value = '';
+    document.getElementById('loginPassword').value = '';
+  }
+
+  function showDashboard() {
+    document.getElementById('loginPanel').style.display = 'none';
+    document.getElementById('setPasswordPanel').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    document.getElementById('headerUser').style.display = 'block';
+    document.getElementById('headerUserName').textContent = currentUser.Title;
+    document.getElementById('headerUserRole').textContent = currentUser.Hlutverk?.Value || currentUser.Hlutverk || '';
+    buildDashboard();
+  }
+
+  function buildDashboard() {
+    const role = currentUser.Hlutverk?.Value || currentUser.Hlutverk || '';
+    const tabBar = document.getElementById('tabBar');
+    const panelContainer = document.getElementById('panelContainer');
+    tabBar.innerHTML = '';
+    panelContainer.innerHTML = '';
+
+    const tabs = [];
+
+    // All roles see Tilkynningar
+    tabs.push({ id: 'tilkynningar', label: 'Tilkynningar' });
+
+    // Lagerstjóri, Skrifstofa, Master see statistics
+    if (['Lagerstjóri', 'Skrifstofa', 'Master'].includes(role)) {
+      tabs.push({ id: 'stats', label: 'Tölfræði' });
+    }
+
+    // Master sees user management
+    if (role === 'Master') {
+      tabs.push({ id: 'notendur', label: 'Notendur' });
+    }
+
+    tabs.forEach((tab, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'elko-tab' + (i === 0 ? ' active' : '');
+      btn.textContent = tab.label;
+      btn.onclick = () => switchTab(tab.id, btn);
+      tabBar.appendChild(btn);
+
+      const panel = document.createElement('div');
+      panel.className = 'elko-panel' + (i === 0 ? ' active' : '');
+      panel.id = 'panel-' + tab.id;
+      panelContainer.appendChild(panel);
+    });
+
+    loadTilkynningar();
+  }
+
+  function switchTab(tab, btn) {
+    document.querySelectorAll('.elko-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.elko-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + tab).classList.add('active');
+
+    if (tab === 'tilkynningar') loadTilkynningar();
+    if (tab === 'stats') loadStats();
+    if (tab === 'notendur') loadNotendur();
+  }
+
+  // Placeholder functions — Part 2 will fill these in
+  async function loadTilkynningar() {
+    document.getElementById('panel-tilkynningar').innerHTML = '<p style="padding:20px;">Hleður tilkynningar...</p>';
+  }
+
+  async function loadStats() {
+    document.getElementById('panel-stats').innerHTML = '<p style="padding:20px;">Hleður tölfræði...</p>';
+  }
+
+  async function loadNotendur() {
+    document.getElementById('panel-notendur').innerHTML = '<p style="padding:20px;">Hleður notendur...</p>';
+  }
+
+</script>
+</body>
+</html>
