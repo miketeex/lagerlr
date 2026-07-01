@@ -205,7 +205,6 @@
   </div>
 </div>
 
-<!-- LOGIN PANEL -->
 <div id="loginPanel">
   <div class="login-wrap">
     <h2>Innskráning</h2>
@@ -223,7 +222,6 @@
   </div>
 </div>
 
-<!-- SET PASSWORD PANEL -->
 <div id="setPasswordPanel" style="display:none;">
   <div class="login-wrap">
     <h2>Búðu til lykilorð</h2>
@@ -241,7 +239,6 @@
   </div>
 </div>
 
-<!-- FORGOT PASSWORD PANEL -->
 <div id="forgotPanel" style="display:none;">
   <div class="login-wrap">
     <h2>Gleymt lykilorð</h2>
@@ -256,7 +253,6 @@
   </div>
 </div>
 
-<!-- RESET CODE PANEL -->
 <div id="resetCodePanel" style="display:none;">
   <div class="login-wrap">
     <h2>Sláðu inn kóða</h2>
@@ -278,7 +274,6 @@
   </div>
 </div>
 
-<!-- DASHBOARD -->
 <div class="dashboard" id="dashboard">
   <div class="elko-container">
     <div id="dashNotify" class="elko-notify"></div>
@@ -329,11 +324,7 @@
   async function login() {
     const email = document.getElementById('loginEmail').value.trim().toLowerCase();
     const password = document.getElementById('loginPassword').value;
-
-    if (!email || !password) {
-      notify('loginNotify', 'Fylltu inn netfang og lykilorð.', 'error');
-      return;
-    }
+    if (!email || !password) { notify('loginNotify', 'Fylltu inn netfang og lykilorð.', 'error'); return; }
 
     try {
       const res = await fetch(FLOW_NOTANDI, {
@@ -343,10 +334,7 @@
       });
       const user = await res.json();
 
-      if (!user || !user.Title) {
-        notify('loginNotify', 'Notandi ekki fundinn.', 'error');
-        return;
-      }
+      if (!user || !user.Title) { notify('loginNotify', 'Notandi ekki fundinn.', 'error'); return; }
 
       if (!user.LykilordSett) {
         pendingEmail = email;
@@ -356,10 +344,7 @@
       }
 
       const hash = await hashPassword(password);
-      if (hash !== user.Lykilord) {
-        notify('loginNotify', 'Rangt lykilorð.', 'error');
-        return;
-      }
+      if (hash !== user.Lykilord) { notify('loginNotify', 'Rangt lykilorð.', 'error'); return; }
 
       currentUser = user;
       saveSession();
@@ -374,7 +359,6 @@
   async function setPassword() {
     const p1 = document.getElementById('newPassword1').value;
     const p2 = document.getElementById('newPassword2').value;
-
     if (!p1 || !p2) { notify('setPasswordNotify', 'Fylltu inn lykilorð.', 'error'); return; }
     if (p1 !== p2) { notify('setPasswordNotify', 'Lykilorðin eru ekki eins.', 'error'); return; }
     if (p1.length < 8) { notify('setPasswordNotify', 'Lykilorð verður að vera að minnsta kosti 8 stafir.', 'error'); return; }
@@ -386,7 +370,6 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ Notandi: pendingEmail, Lykilord: hash })
       });
-
       const res = await fetch(FLOW_NOTANDI, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -396,7 +379,6 @@
       saveSession();
       document.getElementById('setPasswordPanel').style.display = 'none';
       showDashboard();
-
     } catch(e) {
       notify('setPasswordNotify', 'Villa við að vista lykilorð.', 'error');
       console.error(e);
@@ -436,7 +418,7 @@
   }
 
   function buildDashboard() {
-    const role = currentUser.Hlutverk?.Value || currentUser.Hlutverk || '';
+    const role = currentUser?.Hlutverk?.Value || currentUser?.Hlutverk || '';
     const tabBar = document.getElementById('tabBar');
     const panelContainer = document.getElementById('panelContainer');
     tabBar.innerHTML = '';
@@ -473,9 +455,15 @@
     if (tab === 'notendur') loadNotendur();
   }
 
-async function loadTilkynningar() {
-  if (!currentUser) return;
-  const panel = document.getElementById('panel-tilkynningar');
+  function getVidList(vidbotar) {
+    if (!vidbotar) return [];
+    if (Array.isArray(vidbotar)) return vidbotar.map(v => v.Value || v);
+    return [vidbotar];
+  }
+
+  async function loadTilkynningar() {
+    if (!currentUser) return;
+    const panel = document.getElementById('panel-tilkynningar');
     panel.innerHTML = '<p style="padding:20px;">Hleður tilkynningar...</p>';
 
     try {
@@ -491,12 +479,9 @@ async function loadTilkynningar() {
       const verslun = currentUser?.Verslun || '';
       const vidbotar = currentUser?.Vi_x00f0_b_x00f3_tarVerslun || '';
 
-if (role === 'Verslunarstjóri') {
-  const vidList = Array.isArray(vidbotar)
-    ? vidbotar.map(v => v.Value || v)
-    : (vidbotar ? [vidbotar] : []);
-  items = items.filter(i => i.Verslun === verslun || vidList.includes(i.Verslun));
-}
+      if (role === 'Verslunarstjóri') {
+        const vidList = getVidList(vidbotar);
+        items = items.filter(i => i.Verslun === verslun || vidList.includes(i.Verslun));
       } else if (role === 'Lagerstjóri') {
         items = items.filter(i => i.Verslun === verslun);
       }
@@ -570,7 +555,7 @@ if (role === 'Verslunarstjóri') {
 
   function renderTilkynningar(items) {
     const tbody = document.getElementById('tilkynningarBody');
-    const role = currentUser.Hlutverk?.Value || currentUser.Hlutverk || '';
+    const role = currentUser?.Hlutverk?.Value || currentUser?.Hlutverk || '';
 
     if (!items.length) {
       tbody.innerHTML = '<tr><td colspan="10">Engar tilkynningar fundust.</td></tr>';
@@ -621,6 +606,7 @@ if (role === 'Verslunarstjóri') {
   }
 
   async function loadStats() {
+    if (!currentUser) return;
     const panel = document.getElementById('panel-stats');
     panel.innerHTML = '<p style="padding:20px;">Hleður tölfræði...</p>';
 
@@ -633,16 +619,13 @@ if (role === 'Verslunarstjóri') {
       const data = await res.json();
       let items = data.value || data;
 
-      const role = currentUser.Hlutverk?.Value || currentUser.Hlutverk || '';
-      const verslun = currentUser.Verslun || '';
-      const vidbotar = currentUser.Vi_x00f0_b_x00f3_tarVerslun || '';
+      const role = currentUser?.Hlutverk?.Value || currentUser?.Hlutverk || '';
+      const verslun = currentUser?.Verslun || '';
+      const vidbotar = currentUser?.Vi_x00f0_b_x00f3_tarVerslun || '';
 
-if (role === 'Verslunarstjóri') {
-  const vidList = Array.isArray(vidbotar)
-    ? vidbotar.map(v => v.Value || v)
-    : (vidbotar ? [vidbotar] : []);
-  items = items.filter(i => i.Verslun === verslun || vidList.includes(i.Verslun));
-}
+      if (role === 'Verslunarstjóri') {
+        const vidList = getVidList(vidbotar);
+        items = items.filter(i => i.Verslun === verslun || vidList.includes(i.Verslun));
       } else if (role === 'Lagerstjóri') {
         items = items.filter(i => i.Verslun === verslun);
       }
@@ -725,12 +708,8 @@ if (role === 'Verslunarstjóri') {
         <div id="newUserForm" style="display:none; background:white; padding:20px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.1); margin-bottom:20px;">
           <h3 style="color:var(--elko-dark); margin-bottom:16px;">Nýr notandi</h3>
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
-            <div class="elko-field">
-              <label>Netfang *</label>
-              <input type="email" id="newUserEmail" placeholder="netfang@elko.is">
-            </div>
-            <div class="elko-field">
-              <label>Hlutverk *</label>
+            <div class="elko-field"><label>Netfang *</label><input type="email" id="newUserEmail" placeholder="netfang@elko.is"></div>
+            <div class="elko-field"><label>Hlutverk *</label>
               <select id="newUserHlutverk">
                 <option value="">-- Veldu hlutverk --</option>
                 <option value="Verslunarstjóri">Verslunarstjóri</option>
@@ -739,28 +718,18 @@ if (role === 'Verslunarstjóri') {
                 <option value="Master">Master</option>
               </select>
             </div>
-            <div class="elko-field">
-              <label>Verslun</label>
+            <div class="elko-field"><label>Verslun</label>
               <select id="newUserVerslun">
                 <option value="">-- Veldu verslun --</option>
-                <option>ELKO Lindir</option>
-                <option>ELKO Smáralind</option>
-                <option>ELKO Skeifan</option>
-                <option>ELKO Grandi</option>
-                <option>ELKO Akureyri</option>
-                <option>ELKO Flugstöð</option>
+                <option>ELKO Lindir</option><option>ELKO Smáralind</option><option>ELKO Skeifan</option>
+                <option>ELKO Grandi</option><option>ELKO Akureyri</option><option>ELKO Flugstöð</option>
               </select>
             </div>
-            <div class="elko-field">
-              <label>Viðbótarverslun</label>
+            <div class="elko-field"><label>Viðbótarverslun</label>
               <select id="newUserVidbotar">
                 <option value="">-- Engin --</option>
-                <option>ELKO Lindir</option>
-                <option>ELKO Smáralind</option>
-                <option>ELKO Skeifan</option>
-                <option>ELKO Grandi</option>
-                <option>ELKO Akureyri</option>
-                <option>ELKO Flugstöð</option>
+                <option>ELKO Lindir</option><option>ELKO Smáralind</option><option>ELKO Skeifan</option>
+                <option>ELKO Grandi</option><option>ELKO Akureyri</option><option>ELKO Flugstöð</option>
               </select>
             </div>
           </div>
@@ -771,8 +740,7 @@ if (role === 'Verslunarstjóri') {
           <h3 style="color:var(--elko-dark); margin-bottom:16px;">Breyta notanda: <span id="editUserEmail"></span></h3>
           <input type="hidden" id="editUserId">
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
-            <div class="elko-field">
-              <label>Hlutverk *</label>
+            <div class="elko-field"><label>Hlutverk *</label>
               <select id="editUserHlutverk">
                 <option value="Verslunarstjóri">Verslunarstjóri</option>
                 <option value="Lagerstjóri">Lagerstjóri</option>
@@ -780,28 +748,18 @@ if (role === 'Verslunarstjóri') {
                 <option value="Master">Master</option>
               </select>
             </div>
-            <div class="elko-field">
-              <label>Verslun</label>
+            <div class="elko-field"><label>Verslun</label>
               <select id="editUserVerslun">
                 <option value="">-- Engin --</option>
-                <option>ELKO Lindir</option>
-                <option>ELKO Smáralind</option>
-                <option>ELKO Skeifan</option>
-                <option>ELKO Grandi</option>
-                <option>ELKO Akureyri</option>
-                <option>ELKO Flugstöð</option>
+                <option>ELKO Lindir</option><option>ELKO Smáralind</option><option>ELKO Skeifan</option>
+                <option>ELKO Grandi</option><option>ELKO Akureyri</option><option>ELKO Flugstöð</option>
               </select>
             </div>
-            <div class="elko-field">
-              <label>Viðbótarverslun</label>
+            <div class="elko-field"><label>Viðbótarverslun</label>
               <select id="editUserVidbotar">
                 <option value="">-- Engin --</option>
-                <option>ELKO Lindir</option>
-                <option>ELKO Smáralind</option>
-                <option>ELKO Skeifan</option>
-                <option>ELKO Grandi</option>
-                <option>ELKO Akureyri</option>
-                <option>ELKO Flugstöð</option>
+                <option>ELKO Lindir</option><option>ELKO Smáralind</option><option>ELKO Skeifan</option>
+                <option>ELKO Grandi</option><option>ELKO Akureyri</option><option>ELKO Flugstöð</option>
               </select>
             </div>
           </div>
@@ -812,12 +770,7 @@ if (role === 'Verslunarstjóri') {
           <table>
             <thead>
               <tr>
-                <th>Netfang</th>
-                <th>Hlutverk</th>
-                <th>Verslun</th>
-                <th>Viðbótarverslun</th>
-                <th>Lykilorð sett</th>
-                <th>Aðgerð</th>
+                <th>Netfang</th><th>Hlutverk</th><th>Verslun</th><th>Viðbótarverslun</th><th>Lykilorð sett</th><th>Aðgerð</th>
               </tr>
             </thead>
             <tbody>
@@ -828,7 +781,7 @@ if (role === 'Verslunarstjóri') {
                 <td>${Array.isArray(u.Vi_x00f0_b_x00f3_tarVerslun) ? u.Vi_x00f0_b_x00f3_tarVerslun.map(v => v.Value || v).join(', ') : u.Vi_x00f0_b_x00f3_tarVerslun || ''}</td>
                 <td>${u.LykilordSett ? '✅' : '❌'}</td>
                 <td>
-                  <button class="elko-btn elko-btn-sm elko-btn-secondary" onclick="editNotandi(${u.ID}, '${u.Title}', '${u.Hlutverk?.Value || u.Hlutverk || ''}', '${u.Verslun || ''}', '${u.Vi_x00f0_b_x00f3_tarVerslun || ''}')">Breyta</button>
+                  <button class="elko-btn elko-btn-sm elko-btn-secondary" onclick="editNotandi(${u.ID}, '${u.Title}', '${u.Hlutverk?.Value || u.Hlutverk || ''}', '${u.Verslun || ''}', '')">Breyta</button>
                   <button class="elko-btn elko-btn-sm elko-btn-danger" style="margin-left:4px;" onclick="resetNotandi(${u.ID}, '${u.Title}')">Endurstilla</button>
                   <button class="elko-btn elko-btn-sm elko-btn-danger" style="margin-left:4px;" onclick="eydaNotanda(${u.ID}, '${u.Title}')">Eyða</button>
                 </td>
@@ -843,16 +796,12 @@ if (role === 'Verslunarstjóri') {
     }
   }
 
-  function showNewUserForm() {
-    document.getElementById('newUserForm').style.display = 'block';
-  }
+  function showNewUserForm() { document.getElementById('newUserForm').style.display = 'block'; }
 
   async function createUser() {
     const email = document.getElementById('newUserEmail').value.trim().toLowerCase();
     const hlutverk = document.getElementById('newUserHlutverk').value;
     const verslun = document.getElementById('newUserVerslun').value;
-    const vidbotar = document.getElementById('newUserVidbotar').value;
-
     if (!email || !hlutverk) { notify('dashNotify', 'Fylltu inn netfang og hlutverk.', 'error'); return; }
 
     try {
@@ -862,9 +811,7 @@ if (role === 'Verslunarstjóri') {
         body: JSON.stringify({ ApiKey: API_KEY, Notandi: email, Hlutverk: hlutverk, Verslun: verslun })
       });
       const data = await res.json();
-
       if (data.error) { notify('dashNotify', 'Notandi er nú þegar til.', 'error'); return; }
-
       notify('dashNotify', 'Notandi búinn til!', 'success');
       loadNotendur();
     } catch(e) {
@@ -947,13 +894,10 @@ if (role === 'Verslunarstjóri') {
         body: JSON.stringify({ Notandi: email })
       });
       const data = await res.json();
-
       if (data.error) { notify('forgotNotify', 'Notandi ekki fundinn.', 'error'); return; }
-
       pendingEmail = email;
       document.getElementById('forgotPanel').style.display = 'none';
       document.getElementById('resetCodePanel').style.display = 'block';
-
     } catch(e) {
       notify('forgotNotify', 'Villa við að senda kóða. Reyndu aftur.', 'error');
       console.error(e);
@@ -977,13 +921,10 @@ if (role === 'Verslunarstjóri') {
         body: JSON.stringify({ Notandi: pendingEmail, Kodi: kodi, Lykilord: hash })
       });
       const data = await res.json();
-
       if (data.error) { notify('resetCodeNotify', 'Rangur kóði. Reyndu aftur.', 'error'); return; }
-
       document.getElementById('resetCodePanel').style.display = 'none';
       document.getElementById('loginPanel').style.display = 'block';
       notify('loginNotify', 'Lykilorð hefur verið endurstillt. Skráðu þig inn.', 'success');
-
     } catch(e) {
       notify('resetCodeNotify', 'Villa við að endurstilla lykilorð. Reyndu aftur.', 'error');
       console.error(e);
