@@ -285,11 +285,11 @@
       list.classList.remove('active');
       return;
     }
-    list.innerHTML = items.map(item => `
-      <div class="autocomplete-item" onclick="selectProduct('${item.Title}', '${(item.Vara || '').replace(/'/g, "\\'")}')">
-        ${item.Title} <span>${item.Vara || ''}</span>
-      </div>
-    `).join('');
+list.innerHTML = items.map(item => `
+  <div class="autocomplete-item" onmousedown="selectProduct('${item.Title}', '${(item.Vara || '').replace(/'/g, "\\'")}')">
+    ${item.Title} <span>${item.Vara || ''}</span>
+  </div>
+`).join('');
     list.classList.add('active');
   }
 
