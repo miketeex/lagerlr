@@ -839,7 +839,7 @@ function editNotandi(id) {
     const id = document.getElementById('editUserId').value;
     const hlutverk = document.getElementById('editUserHlutverk').value;
     const verslun = document.getElementById('editUserVerslun').value;
-    const vidbotar = Array.from(document.getElementById('editUserVidbotar').selectedOptions).map(o => o.value);
+    const vidbotar = Array.from(document.getElementById('editUserVidbotar').selectedOptions).map(o => ({ Value: o.value }));
 
     try {
       await fetch('https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/9b16f9080f27475ba17391b8d520b405/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=2UemCPPB6J2uAbrEsPPBPFLPiB62biqSYprT5yEtj-s', {
