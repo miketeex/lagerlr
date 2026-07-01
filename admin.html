@@ -222,6 +222,7 @@
       <input type="password" id="loginPassword" placeholder="Lykilorð" onkeydown="if(event.key==='Enter') login()">
     </div>
     <button class="elko-btn" style="width:100%;" onclick="login()">Innskrá</button>
+    <p style="text-align:center; margin-top:12px;"><a href="#" onclick="showForgot()" style="font-size:13px; color:var(--elko-dark);">Gleymt lykilorð?</a></p>
   </div>
 </div>
 
@@ -242,7 +243,42 @@
     <button class="elko-btn" style="width:100%;" onclick="setPassword()">Vista lykilorð</button>
   </div>
 </div>
+<!-- FORGOT PASSWORD PANEL -->
+<div id="forgotPanel" style="display:none;">
+  <div class="login-wrap">
+    <h2>Gleymt lykilorð</h2>
+    <p style="font-size:13px; color:#666; margin-bottom:20px;">Sláðu inn netfangið þitt og við sendum þér endurstillingarkóða.</p>
+    <div id="forgotNotify" class="elko-notify"></div>
+    <div class="elko-field">
+      <label>Netfang</label>
+      <input type="email" id="forgotEmail" placeholder="netfang@elko.is">
+    </div>
+    <button class="elko-btn" style="width:100%;" onclick="sendResetCode()">Senda kóða</button>
+    <p style="text-align:center; margin-top:16px;"><a href="#" onclick="showLogin()" style="font-size:13px; color:var(--elko-dark);">← Til baka</a></p>
+  </div>
+</div>
 
+<!-- RESET CODE PANEL -->
+<div id="resetCodePanel" style="display:none;">
+  <div class="login-wrap">
+    <h2>Sláðu inn kóða</h2>
+    <p style="font-size:13px; color:#666; margin-bottom:20px;">Við sendum þér 6 stafa kóða í tölvupóst.</p>
+    <div id="resetCodeNotify" class="elko-notify"></div>
+    <div class="elko-field">
+      <label>Kóði</label>
+      <input type="text" id="resetCode" placeholder="6 stafir" maxlength="6">
+    </div>
+    <div class="elko-field">
+      <label>Nýtt lykilorð</label>
+      <input type="password" id="resetPassword1" placeholder="Lykilorð">
+    </div>
+    <div class="elko-field">
+      <label>Staðfestu lykilorð</label>
+      <input type="password" id="resetPassword2" placeholder="Lykilorð aftur">
+    </div>
+    <button class="elko-btn" style="width:100%;" onclick="confirmReset()">Vista nýtt lykilorð</button>
+  </div>
+</div>
 <!-- DASHBOARD -->
 <div class="dashboard" id="dashboard">
   <div class="elko-container">
@@ -259,7 +295,9 @@
   const FLOW_NYR_NOTANDI = 'https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/01484e7be9184e3e9953dac3839df641/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ddG8cuuVhdPyHKIF4R97bd3fvriiuajobLuJ-Y7r8zQ';
   const FLOW_TILKYNNINGAR = 'https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/331426e4fade487283995157e82d887b/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=L5iZmz5MwuMJhIx6lD5tR_rwn_nS0lMPAAJzE9IBbUA';
   const FLOW_UPPFAERA_STODU = 'https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/cccfb4d7f0a04cc68c58f577821be76b/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=R47t77wnCwbRNjFFkYQHYlvZ9dqJ0DqsiVmny7zklnU';
-
+  const FLOW_RESET = 'https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/770eab79ecde41c49c29d39ec3dd4711/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=fZnJKeLKQfjDorHwz_bxhmxtyXRrg84odpNMG5LE_dw';
+  const FLOW_STADFESTA_RESET = 'https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/300e654cb3d54fd1b18f110e315bac4a/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=-_RY8ZbD7UIFCTvenf7s7e_niwHg35IminBItchJ62Q';
+  
   let currentUser = null;
   let pendingEmail = null;
 
@@ -590,6 +628,90 @@ async function loadTilkynningar() {
     document.getElementById('panel-notendur').innerHTML = '<p style="padding:20px;">Hleður notendur...</p>';
   }
 
+  function showLogin() {
+  document.getElementById('loginPanel').style.display = 'block';
+  document.getElementById('forgotPanel').style.display = 'none';
+  document.getElementById('resetCodePanel').style.display = 'none';
+}
+
+function showForgot() {
+  document.getElementById('loginPanel').style.display = 'none';
+  document.getElementById('forgotPanel').style.display = 'block';
+}
+
+async function sendResetCode() {
+  const email = document.getElementById('forgotEmail').value.trim().toLowerCase();
+  if (!email) {
+    notify('forgotNotify', 'Sláðu inn netfang.', 'error');
+    return;
+  }
+
+  try {
+    const res = await fetch(FLOW_RESET, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ Notandi: email })
+    });
+    const data = await res.json();
+
+    if (data.error) {
+      notify('forgotNotify', 'Notandi ekki fundinn.', 'error');
+      return;
+    }
+
+    pendingEmail = email;
+    document.getElementById('forgotPanel').style.display = 'none';
+    document.getElementById('resetCodePanel').style.display = 'block';
+
+  } catch(e) {
+    notify('forgotNotify', 'Villa við að senda kóða. Reyndu aftur.', 'error');
+    console.error(e);
+  }
+}
+
+async function confirmReset() {
+  const kodi = document.getElementById('resetCode').value.trim();
+  const p1 = document.getElementById('resetPassword1').value;
+  const p2 = document.getElementById('resetPassword2').value;
+
+  if (!kodi || !p1 || !p2) {
+    notify('resetCodeNotify', 'Fylltu inn alla reiti.', 'error');
+    return;
+  }
+
+  if (p1 !== p2) {
+    notify('resetCodeNotify', 'Lykilorðin eru ekki eins.', 'error');
+    return;
+  }
+
+  if (p1.length < 8) {
+    notify('resetCodeNotify', 'Lykilorð verður að vera að minnsta kosti 8 stafir.', 'error');
+    return;
+  }
+
+  try {
+    const hash = await hashPassword(p1);
+    const res = await fetch(FLOW_STADFESTA_RESET, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ Notandi: pendingEmail, Kodi: kodi, Lykilord: hash })
+    });
+    const data = await res.json();
+
+    if (data.error) {
+      notify('resetCodeNotify', 'Rangur kóði. Reyndu aftur.', 'error');
+      return;
+    }
+
+    document.getElementById('resetCodePanel').style.display = 'none';
+    document.getElementById('loginPanel').style.display = 'block';
+    notify('loginNotify', 'Lykilorð hefur verið endurstillt. Skráðu þig inn.', 'success');
+
+  } catch(e) {
+    notify('resetCodeNotify', 'Villa við að endurstilla lykilorð. Reyndu aftur.', 'error');
+    console.error(e);
+  }
+}
 </script>
 </body>
 </html>
