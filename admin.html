@@ -736,9 +736,153 @@ async function loadStats() {
     }
   }
 
-  async function loadNotendur() {
-    document.getElementById('panel-notendur').innerHTML = '<p style="padding:20px;">Hleður notendur...</p>';
+async function loadNotendur() {
+  const panel = document.getElementById('panel-notendur');
+  panel.innerHTML = '<p style="padding:20px;">Hleður notendur...</p>';
+
+  try {
+    const res = await fetch('https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/0b4c35439a374c2f883c52ed6ad88207/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=bmK_6x1GA6IcPXlbEM-JjVMBwPf9BABKCQM6mc5FHic', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ApiKey: API_KEY })
+    });
+    const data = await res.json();
+    const items = data.value || data;
+
+    panel.innerHTML = `
+      <div class="elko-filters">
+        <button class="elko-btn elko-btn-sm" onclick="showNewUserForm()">+ Nýr notandi</button>
+        <button class="elko-btn elko-btn-sm elko-btn-secondary" onclick="loadNotendur()">🔄 Uppfæra</button>
+      </div>
+      <div id="newUserForm" style="display:none; background:white; padding:20px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.1); margin-bottom:20px;">
+        <h3 style="color:var(--elko-dark); margin-bottom:16px;">Nýr notandi</h3>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div class="elko-field">
+            <label>Netfang *</label>
+            <input type="email" id="newUserEmail" placeholder="netfang@elko.is">
+          </div>
+          <div class="elko-field">
+            <label>Hlutverk *</label>
+            <select id="newUserHlutverk">
+              <option value="">-- Veldu hlutverk --</option>
+              <option value="Verslunarstjóri">Verslunarstjóri</option>
+              <option value="Lagerstjóri">Lagerstjóri</option>
+              <option value="Skrifstofa">Skrifstofa</option>
+              <option value="Master">Master</option>
+            </select>
+          </div>
+          <div class="elko-field">
+            <label>Verslun</label>
+            <select id="newUserVerslun">
+              <option value="">-- Veldu verslun --</option>
+              <option>ELKO Lindir</option>
+              <option>ELKO Smáralind</option>
+              <option>ELKO Skeifan</option>
+              <option>ELKO Grandi</option>
+              <option>ELKO Akureyri</option>
+              <option>ELKO Flugstöð</option>
+            </select>
+          </div>
+          <div class="elko-field">
+            <label>Viðbótarverslun</label>
+            <select id="newUserVidbotar">
+              <option value="">-- Engin --</option>
+              <option>ELKO Lindir</option>
+              <option>ELKO Smáralind</option>
+              <option>ELKO Skeifan</option>
+              <option>ELKO Grandi</option>
+              <option>ELKO Akureyri</option>
+              <option>ELKO Flugstöð</option>
+            </select>
+          </div>
+        </div>
+        <button class="elko-btn" onclick="createUser()">Búa til notanda</button>
+        <button class="elko-btn elko-btn-secondary" style="margin-left:10px;" onclick="document.getElementById('newUserForm').style.display='none'">Hætta við</button>
+      </div>
+      <div class="elko-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Netfang</th>
+              <th>Hlutverk</th>
+              <th>Verslun</th>
+              <th>Viðbótarverslun</th>
+              <th>Lykilorð sett</th>
+              <th>Aðgerð</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${items.map(u => `<tr>
+              <td>${u.Title || ''}</td>
+              <td>${u.Hlutverk?.Value || u.Hlutverk || ''}</td>
+              <td>${u.Verslun || ''}</td>
+              <td>${u.Vi_x00f0_b_x00f3_tarVerslun || ''}</td>
+              <td>${u.LykilordSett ? '✅' : '❌'}</td>
+              <td>
+                <button class="elko-btn elko-btn-sm elko-btn-danger" onclick="resetNotandi(${u.ID}, '${u.Title}')">Endurstilla</button>
+              </td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+
+  } catch(e) {
+    panel.innerHTML = '<p style="padding:20px; color:red;">Villa við að sækja notendur.</p>';
+    console.error(e);
   }
+}
+
+function showNewUserForm() {
+  document.getElementById('newUserForm').style.display = 'block';
+}
+
+async function createUser() {
+  const email = document.getElementById('newUserEmail').value.trim().toLowerCase();
+  const hlutverk = document.getElementById('newUserHlutverk').value;
+  const verslun = document.getElementById('newUserVerslun').value;
+  const vidbotar = document.getElementById('newUserVidbotar').value;
+
+  if (!email || !hlutverk) {
+    notify('dashNotify', 'Fylltu inn netfang og hlutverk.', 'error');
+    return;
+  }
+
+  try {
+    const res = await fetch(FLOW_NYR_NOTANDI, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ApiKey: API_KEY, Notandi: email, Hlutverk: hlutverk, Verslun: verslun })
+    });
+    const data = await res.json();
+
+    if (data.error) {
+      notify('dashNotify', 'Notandi er nú þegar til.', 'error');
+      return;
+    }
+
+    notify('dashNotify', 'Notandi búinn til!', 'success');
+    loadNotendur();
+  } catch(e) {
+    notify('dashNotify', 'Villa við að búa til notanda.', 'error');
+    console.error(e);
+  }
+}
+
+async function resetNotandi(id, email) {
+  if (!confirm(`Endurstilla lykilorð fyrir ${email}?`)) return;
+  try {
+    await fetch('https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/f7014af0b5874162a3eea3040e675a1a/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=CxggGrcP-zW52lue-U96aztwDL9lhx1uTVgDKAr3JFU', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ApiKey: API_KEY, ID: id })
+    });
+    notify('dashNotify', `Lykilorð endurstillt fyrir ${email}.`, 'success');
+    loadNotendur();
+  } catch(e) {
+    notify('dashNotify', 'Villa við að endurstilla lykilorð.', 'error');
+    console.error(e);
+  }
+}
 
   function showLogin() {
   document.getElementById('loginPanel').style.display = 'block';
