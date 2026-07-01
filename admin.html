@@ -699,6 +699,7 @@
       });
       const data = await res.json();
       const items = data.value || data;
+      window._allNotendur = items;
 
       panel.innerHTML = `
         <div class="elko-filters">
@@ -755,13 +756,13 @@
                 <option>ELKO Grandi</option><option>ELKO Akureyri</option><option>ELKO Flugstöð</option>
               </select>
             </div>
-            <div class="elko-field"><label>Viðbótarverslun</label>
-              <select id="editUserVidbotar">
-                <option value="">-- Engin --</option>
-                <option>ELKO Lindir</option><option>ELKO Smáralind</option><option>ELKO Skeifan</option>
-                <option>ELKO Grandi</option><option>ELKO Akureyri</option><option>ELKO Flugstöð</option>
-              </select>
-            </div>
+<div class="elko-field"><label>Viðbótarverslanir</label>
+  <select id="editUserVidbotar" multiple style="height:130px;">
+    <option>ELKO Lindir</option><option>ELKO Smáralind</option><option>ELKO Skeifan</option>
+    <option>ELKO Grandi</option><option>ELKO Akureyri</option><option>ELKO Flugstöð</option>
+  </select>
+  <div style="font-size:11px; color:#999; margin-top:4px;">Haltu Ctrl (eða Cmd) til að velja fleiri en eina</div>
+</div>
           </div>
           <button class="elko-btn" onclick="saveNotandi()">Vista breytingar</button>
           <button class="elko-btn elko-btn-secondary" style="margin-left:10px;" onclick="document.getElementById('editUserForm').style.display='none'">Hætta við</button>
@@ -820,21 +821,25 @@
     }
   }
 
-  function editNotandi(id, email, hlutverk, verslun, vidbotar) {
-    document.getElementById('editUserForm').style.display = 'block';
-    document.getElementById('editUserId').value = id;
-    document.getElementById('editUserEmail').textContent = email;
-    document.getElementById('editUserHlutverk').value = hlutverk;
-    document.getElementById('editUserVerslun').value = verslun;
-    document.getElementById('editUserVidbotar').value = vidbotar;
-    document.getElementById('editUserForm').scrollIntoView({ behavior: 'smooth' });
-  }
+function editNotandi(id) {
+  const u = window._allNotendur.find(x => x.ID === id);
+  if (!u) return;
+  document.getElementById('editUserForm').style.display = 'block';
+  document.getElementById('editUserId').value = id;
+  document.getElementById('editUserEmail').textContent = u.Title;
+  document.getElementById('editUserHlutverk').value = u.Hlutverk?.Value || u.Hlutverk || '';
+  document.getElementById('editUserVerslun').value = u.Verslun || '';
+  const vidEl = document.getElementById('editUserVidbotar');
+  const vidArray = getVidList(u.Vi_x00f0_b_x00f3_tarVerslun);
+  Array.from(vidEl.options).forEach(o => o.selected = vidArray.includes(o.value));
+  document.getElementById('editUserForm').scrollIntoView({ behavior: 'smooth' });
+}
 
   async function saveNotandi() {
     const id = document.getElementById('editUserId').value;
     const hlutverk = document.getElementById('editUserHlutverk').value;
     const verslun = document.getElementById('editUserVerslun').value;
-    const vidbotar = document.getElementById('editUserVidbotar').value;
+    const vidbotar = Array.from(document.getElementById('editUserVidbotar').selectedOptions).map(o => o.value);
 
     try {
       await fetch('https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/9b16f9080f27475ba17391b8d520b405/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=2UemCPPB6J2uAbrEsPPBPFLPiB62biqSYprT5yEtj-s', {
