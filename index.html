@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ELKO Lagerleiðrétting</title>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --elko-green: #638b2c;
+      --elko-dark: #00126b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Open Sans', sans-serif; background: #f9f9f9; }
+
+    .elko-header {
+      background: var(--elko-dark);
+      color: white;
+      padding: 20px 30px;
+    }
+
+    .elko-container { max-width: 700px; margin: 30px auto; padding: 0 20px 40px 20px; }
+
+    .elko-notify {
+      padding: 12px 20px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      display: none;
+    }
+
+    .elko-notify.success { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; display: block; }
+    .elko-notify.error { background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; display: block; }
+
+    .elko-card {
+      background: white;
+      border-radius: 10px;
+      padding: 30px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .elko-card h2 { color: var(--elko-dark); margin-bottom: 24px; font-size: 18px; }
+
+    .elko-field { margin-bottom: 16px; }
+    .elko-field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #333; }
+    .elko-field input, .elko-field select, .elko-field textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1.5px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: 'Open Sans', sans-serif;
+    }
+
+    .elko-field input:focus, .elko-field select:focus, .elko-field textarea:focus {
+      border-color: var(--elko-dark);
+      outline: none;
+    }
+
+    .elko-field textarea { resize: vertical; min-height: 100px; }
+
+    .elko-field .vara-desc {
+      font-size: 12px;
+      color: #666;
+      margin-top: 4px;
+      min-height: 18px;
+    }
+
+    .autocomplete-wrapper { position: relative; }
+
+    .autocomplete-list {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1.5px solid var(--elko-dark);
+      border-top: none;
+      border-radius: 0 0 6px 6px;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 100;
+      display: none;
+    }
+
+    .autocomplete-list.active { display: block; }
+
+    .autocomplete-item {
+      padding: 8px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+    }
+
+    .autocomplete-item:hover { background: #f0f4ff; }
+    .autocomplete-item span { color: #666; font-size: 11px; margin-left: 8px; }
+
+    .store-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .store-btn {
+      padding: 12px 8px;
+      border: 2px solid var(--elko-dark);
+      border-radius: 8px;
+      background: white;
+      color: var(--elko-dark);
+      font-family: 'Open Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .store-btn.active {
+      background: var(--elko-dark);
+      color: white;
+    }
+
+    .store-btn:hover {
+      background: var(--elko-dark);
+      color: white;
+    }
+
+    .elko-btn {
+      background: var(--elko-green);
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 6px;
+      font-size: 15px;
+      cursor: pointer;
+      font-family: 'Open Sans', sans-serif;
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .elko-btn:hover { background: #4e6e22; }
+
+    .form-section { display: none; }
+    .form-section.active { display: block; }
+
+    .store-label {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 16px;
+    }
+
+    .store-label strong { color: var(--elko-dark); }
+  </style>
+</head>
+<body>
+
+<div class="elko-header">
+  <img src="images/ELKO_logo_SVG.svg" alt="ELKO" style="height:32px; display:block; margin-bottom:4px;">
+  <div style="font-size:10px; font-weight:400; opacity:0.8; letter-spacing:1px; text-transform:uppercase;">Lager</div>
+  <div style="font-size:22px; font-weight:700;">Lagerleiðrétting</div>
+</div>
+
+<div class="elko-container">
+
+  <div id="notify" class="elko-notify"></div>
+
+  <!-- Store selection -->
+  <div id="storeSection">
+    <div class="elko-card">
+      <h2>Veldu verslun</h2>
+      <div class="store-grid">
+        <button class="store-btn" onclick="selectStore('ELKO Lindir', this)">ELKO Lindir</button>
+        <button class="store-btn" onclick="selectStore('ELKO Smáralind', this)">ELKO Smáralind</button>
+        <button class="store-btn" onclick="selectStore('ELKO Skeifan', this)">ELKO Skeifan</button>
+        <button class="store-btn" onclick="selectStore('ELKO Grandi', this)">ELKO Grandi</button>
+        <button class="store-btn" onclick="selectStore('ELKO Akureyri', this)">ELKO Akureyri</button>
+        <button class="store-btn" onclick="selectStore('ELKO Flugstöð', this)">ELKO Flugstöð</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Report form -->
+  <div id="formSection" class="form-section">
+    <div class="elko-card">
+      <p class="store-label">Verslun: <strong id="selectedStoreLabel"></strong> <a href="#" onclick="changeStore()" style="font-size:12px; color:var(--elko-dark); margin-left:8px;">Breyta</a></p>
+      <h2>Tilkynna frávik</h2>
+
+      <div class="elko-field">
+        <label>Vörunúmer *</label>
+        <div class="autocomplete-wrapper">
+          <input type="text" id="vorunumer" placeholder="Sláðu inn vörunúmer..." autocomplete="off" oninput="searchProducts(this.value)">
+          <div class="autocomplete-list" id="autocompleteList"></div>
+        </div>
+        <div class="vara-desc" id="varaDesc"></div>
+      </div>
+
+      <div class="elko-field">
+        <label>Ástæða *</label>
+        <select id="astæda">
+          <option value="">-- Veldu ástæðu --</option>
+          <option value="Gallað">Gallað</option>
+          <option value="Ósöluhæft">Ósöluhæft</option>
+          <option value="Þjófnaður">Þjófnaður</option>
+          <option value="Lagerleiðrétting">Lagerleiðrétting</option>
+        </select>
+      </div>
+
+      <div class="elko-field">
+        <label>Nánari lýsing *</label>
+        <textarea id="lysing" placeholder="Útskýrðu hvað málið er og af hverju þú ert að setja inn þessa tilkynningu..."></textarea>
+      </div>
+
+      <div class="elko-field">
+        <label>Hver tilkynnir *</label>
+        <input type="text" id="tilkynnir" placeholder="Fullt nafn">
+      </div>
+
+      <button class="elko-btn" onclick="submitReport()">Senda tilkynningu</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const API_KEY = 'Elko-Bankinn-2026-Karamella';
+  const FLOW_VORULIST = 'https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/cb37110e777549edb3015343edb19ab7/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=OMJv86DBHGRkMt3PYFs1e6VUULVLDC-wvRrrwVXNgBc';
+  const FLOW_SUBMIT = 'https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/f2edab4b88714e05865ed0e40c3bb887/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=f9krNOw3as5XVvlqaMNrsyz864i3XSCH3Xbqekfb6E4';
+
+  let selectedStore = '';
+  let selectedVara = '';
+  let selectedVorunumer = '';
+  let searchTimeout = null;
+
+  function notify(msg, type) {
+    const el = document.getElementById('notify');
+    el.textContent = msg;
+    el.className = 'elko-notify ' + type;
+    setTimeout(() => el.className = 'elko-notify', 4000);
+  }
+
+  function selectStore(store, btn) {
+    selectedStore = store;
+    document.getElementById('selectedStoreLabel').textContent = store;
+    document.getElementById('storeSection').style.display = 'none';
+    document.getElementById('formSection').classList.add('active');
+  }
+
+  function changeStore() {
+    selectedStore = '';
+    document.getElementById('storeSection').style.display = 'block';
+    document.getElementById('formSection').classList.remove('active');
+  }
+
+  function searchProducts(query) {
+    clearTimeout(searchTimeout);
+    selectedVara = '';
+    selectedVorunumer = '';
+    document.getElementById('varaDesc').textContent = '';
+
+    if (query.length < 2) {
+      document.getElementById('autocompleteList').classList.remove('active');
+      return;
+    }
+
+    searchTimeout = setTimeout(async () => {
+      try {
+        const res = await fetch(FLOW_VORULIST, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ Query: query })
+        });
+        const data = await res.json();
+        const items = data.value || data;
+        renderAutocomplete(items);
+      } catch(e) {
+        console.error(e);
+      }
+    }, 300);
+  }
+
+  function renderAutocomplete(items) {
+    const list = document.getElementById('autocompleteList');
+    if (!items.length) {
+      list.classList.remove('active');
+      return;
+    }
+    list.innerHTML = items.map(item => `
+      <div class="autocomplete-item" onclick="selectProduct('${item.Title}', '${(item.Vara || '').replace(/'/g, "\\'")}')">
+        ${item.Title} <span>${item.Vara || ''}</span>
+      </div>
+    `).join('');
+    list.classList.add('active');
+  }
+
+  function selectProduct(vorunumer, vara) {
+    selectedVorunumer = vorunumer;
+    selectedVara = vara;
+    document.getElementById('vorunumer').value = vorunumer;
+    document.getElementById('varaDesc').textContent = vara;
+    document.getElementById('autocompleteList').classList.remove('active');
+  }
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.autocomplete-wrapper')) {
+      document.getElementById('autocompleteList').classList.remove('active');
+    }
+  });
+
+  async function submitReport() {
+    const astæda = document.getElementById('astæda').value;
+    const lysing = document.getElementById('lysing').value.trim();
+    const tilkynnir = document.getElementById('tilkynnir').value.trim();
+
+    if (!selectedVorunumer) { notify('Veldu vöru úr listanum.', 'error'); return; }
+    if (!astæda) { notify('Veldu ástæðu.', 'error'); return; }
+    if (!lysing) { notify('Skrifaðu nánari lýsingu.', 'error'); return; }
+    if (!tilkynnir) { notify('Skráðu nafn tilkynnanda.', 'error'); return; }
+
+    try {
+      await fetch(FLOW_SUBMIT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ApiKey: API_KEY,
+          Verslun: selectedStore,
+          Vorunumer: selectedVorunumer,
+          Vara: selectedVara,
+          Astæda: astæda,
+          Lysing: lysing,
+          Tilkynnir: tilkynnir
+        })
+      });
+
+      notify('Tilkynning send!', 'success');
+      document.getElementById('vorunumer').value = '';
+      document.getElementById('varaDesc').textContent = '';
+      document.getElementById('astæda').value = '';
+      document.getElementById('lysing').value = '';
+      document.getElementById('tilkynnir').value = '';
+      selectedVorunumer = '';
+      selectedVara = '';
+    } catch(e) {
+      notify('Villa við að senda tilkynningu. Reyndu aftur.', 'error');
+      console.error(e);
+    }
+  }
+</script>
+
+</body>
+</html>
