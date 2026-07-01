@@ -532,8 +532,9 @@
           </table>
         </div>`;
 
-      window._allTilkynningar = items;
-      renderTilkynningar(items);
+window._allTilkynningar = items;
+renderRedFlags(items);
+renderTilkynningar(items);
 
     } catch(e) {
       panel.innerHTML = '<p style="padding:20px; color:red;">Villa við að sækja tilkynningar.</p>';
@@ -550,9 +551,41 @@
     if (verslun) items = items.filter(i => i.Verslun === verslun);
     if (stada) items = items.filter(i => i.Sta_x00f0_a?.Value === stada || i.Sta_x00f0_a === stada);
     if (astæda) items = items.filter(i => i.OData__x00c1_st_x00e6__x00f0_a?.Value === astæda || i.Astæda === astæda);
-    renderTilkynningar(items);
+    renderRedFlags(items);
+renderTilkynningar(items);
   }
+function renderRedFlags(items) {
+  const counts = {};
+  items.forEach(i => {
+    const v = i.V_x00f6_run_x00fa_mer || i.Vorunumer || '';
+    if (v) counts[v] = (counts[v] || 0) + 1;
+  });
 
+  const flagged = Object.entries(counts)
+    .filter(([, c]) => c >= 2)
+    .sort((a, b) => b[1] - a[1]);
+
+  const existing = document.getElementById('redFlagsSection');
+  if (existing) existing.remove();
+
+  if (!flagged.length) return;
+
+  const section = document.createElement('div');
+  section.id = 'redFlagsSection';
+  section.style.cssText = 'background:white; border-radius:10px; padding:16px 20px; margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,0.1); border-left:4px solid #c62828;';
+  section.innerHTML = `
+    <div style="font-weight:700; color:#c62828; margin-bottom:10px; font-size:14px;">⚠️ Endurteknar tilkynningar</div>
+    <div style="display:flex; flex-wrap:wrap; gap:8px;">
+      ${flagged.map(([v, c]) => `
+        <span style="background:${c >= 3 ? '#ffebee' : '#fff8e1'}; border:1px solid ${c >= 3 ? '#ef9a9a' : '#ffe082'}; border-radius:20px; padding:4px 12px; font-size:12px; font-weight:600; color:${c >= 3 ? '#c62828' : '#f57f17'};">
+          ${c >= 3 ? '🔴' : '🟡'} ${v} — ${c} tilkynningar
+        </span>
+      `).join('')}
+    </div>`;
+
+  const tableWrap = document.querySelector('#panel-tilkynningar .elko-table-wrap');
+  tableWrap.parentNode.insertBefore(section, tableWrap);
+}
   function renderTilkynningar(items) {
     const tbody = document.getElementById('tilkynningarBody');
     const role = currentUser?.Hlutverk?.Value || currentUser?.Hlutverk || '';
@@ -569,7 +602,12 @@
       return `<tr>
         <td>${r.Title || ''}</td>
         <td>${r.Verslun || ''}</td>
-        <td>${r.V_x00f6_run_x00fa_mer || r.Vorunumer || ''}</td>
+        <td>${(() => {
+  const v = r.V_x00f6_run_x00fa_mer || r.Vorunumer || '';
+  const count = window._allTilkynningar.filter(i => (i.V_x00f6_run_x00fa_mer || i.Vorunumer) === v).length;
+  const flag = count >= 3 ? ' 🔴' : count >= 2 ? ' 🟡' : '';
+  return v + flag;
+})()}</td>
         <td>${r.Vara || ''}</td>
         <td>${astæda}</td>
         <td style="max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${r.L_x00fd_sing || r.Lysing || ''}">${r.L_x00fd_sing || r.Lysing || ''}</td>
