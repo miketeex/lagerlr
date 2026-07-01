@@ -779,13 +779,22 @@
                 <td>${u.Title || ''}</td>
                 <td>${u.Hlutverk?.Value || u.Hlutverk || ''}</td>
                 <td>${u.Verslun || ''}</td>
-                <td>${Array.isArray(u.Vi_x00f0_b_x00f3_tarVerslun) ? u.Vi_x00f0_b_x00f3_tarVerslun.map(v => v.Value || v).join(', ') : u.Vi_x00f0_b_x00f3_tarVerslun || ''}</td>
-                <td>${u.LykilordSett ? '✅' : '❌'}</td>
                 <td>
-                  <button class="elko-btn elko-btn-sm elko-btn-secondary" onclick="editNotandi(${u.ID}, '${u.Title}', '${u.Hlutverk?.Value || u.Hlutverk || ''}', '${u.Verslun || ''}', '')">Breyta</button>
-                  <button class="elko-btn elko-btn-sm elko-btn-danger" style="margin-left:4px;" onclick="resetNotandi(${u.ID}, '${u.Title}')">Endurstilla</button>
-                  <button class="elko-btn elko-btn-sm elko-btn-danger" style="margin-left:4px;" onclick="eydaNotanda(${u.ID}, '${u.Title}')">Eyða</button>
-                </td>
+  ${(() => {
+    const vidText = Array.isArray(u.Vi_x00f0_b_x00f3_tarVerslun) 
+      ? u.Vi_x00f0_b_x00f3_tarVerslun.map(v => v.Value || v).join(', ') 
+      : u.Vi_x00f0_b_x00f3_tarVerslun || '';
+    return vidText ? `<span title="${vidText}" style="display:inline-block; max-width:150px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:help;">${vidText}</span>` : '';
+  })()}
+</td>
+                <td>${u.LykilordSett ? '✅' : '❌'}</td>
+<td style="white-space:nowrap;">
+  <div style="display:flex; flex-direction:column; gap:4px; align-items:flex-start;">
+    <button class="elko-btn elko-btn-sm elko-btn-secondary" onclick="editNotandi(${u.ID})">Breyta</button>
+    <button class="elko-btn elko-btn-sm elko-btn-danger" onclick="resetNotandi(${u.ID}, '${u.Title}')">Endurstilla</button>
+    <button class="elko-btn elko-btn-sm elko-btn-danger" onclick="eydaNotanda(${u.ID}, '${u.Title}')">Eyða</button>
+  </div>
+</td>
               </tr>`).join('')}
             </tbody>
           </table>
