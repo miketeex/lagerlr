@@ -289,6 +289,13 @@
 </div>
 
 <script>
+
+  fetch(FLOW_TILKYNNINGAR, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ ApiKey: 'Elko-Bankinn-2026-Karamella' })
+}).then(r => r.json()).then(d => console.log(JSON.stringify(d.value?.[0])));
+  
   const API_KEY = 'Elko-Bankinn-2026-Karamella';
   const FLOW_NOTANDI = 'https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/d0039fe1eb5e4016a4aa244f62ca4a61/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=0L3xVMvbAaY5KOIrKAgjjUbpJdn0OSusqITDYaAArD4';
   const FLOW_LYKILORD = 'https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/9c560b65cbca4d948de93b3598c509b3/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=wRjJMB9d5JJiLw21pNxmvGOJ2XqMDXc8r4o8n3bfXY8';
