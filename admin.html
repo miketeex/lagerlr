@@ -288,7 +288,7 @@
   const FLOW_LYKILORD = 'https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/9c560b65cbca4d948de93b3598c509b3/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=wRjJMB9d5JJiLw21pNxmvGOJ2XqMDXc8r4o8n3bfXY8';
   const FLOW_NYR_NOTANDI = 'https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/01484e7be9184e3e9953dac3839df641/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ddG8cuuVhdPyHKIF4R97bd3fvriiuajobLuJ-Y7r8zQ';
   const FLOW_TILKYNNINGAR = 'https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/b29baea14611487c951ac39436a4fbfc/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ZdWMVmGTeRHQydNyPR400MyxmEcVRD2JaGYNlZXpf_g';
-  const FLOW_UPPFAERA_STODU = 'https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/cccfb4d7f0a04cc68c58f577821be76b/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=R47t77wnCwbRNjFFkYQHYlvZ9dqJ0DqsiVmny7zklnU';
+  const FLOW_UPPFAERA_STODU = 'https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/320020ec7f1b4f978ca0c6530f67d7af/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=acRrJSTcTCnCFzyxGAa71zhWaoF-gbk3erUYbhKbYGc';
   const FLOW_RESET = 'https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/770eab79ecde41c49c29d39ec3dd4711/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=fZnJKeLKQfjDorHwz_bxhmxtyXRrg84odpNMG5LE_dw';
   const FLOW_STADFESTA_RESET = 'https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/300e654cb3d54fd1b18f110e315bac4a/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=-_RY8ZbD7UIFCTvenf7s7e_niwHg35IminBItchJ62Q';
 
@@ -333,23 +333,18 @@
         body: JSON.stringify({ Notandi: email })
       });
       const user = await res.json();
-
       if (!user || !user.Title) { notify('loginNotify', 'Notandi ekki fundinn.', 'error'); return; }
-
       if (!user.LykilordSett) {
         pendingEmail = email;
         document.getElementById('loginPanel').style.display = 'none';
         document.getElementById('setPasswordPanel').style.display = 'block';
         return;
       }
-
       const hash = await hashPassword(password);
       if (hash !== user.Lykilord) { notify('loginNotify', 'Rangt lykilorð.', 'error'); return; }
-
       currentUser = user;
       saveSession();
       showDashboard();
-
     } catch(e) {
       notify('loginNotify', 'Villa við innskráningu. Reyndu aftur.', 'error');
       console.error(e);
@@ -362,7 +357,6 @@
     if (!p1 || !p2) { notify('setPasswordNotify', 'Fylltu inn lykilorð.', 'error'); return; }
     if (p1 !== p2) { notify('setPasswordNotify', 'Lykilorðin eru ekki eins.', 'error'); return; }
     if (p1.length < 8) { notify('setPasswordNotify', 'Lykilorð verður að vera að minnsta kosti 8 stafir.', 'error'); return; }
-
     try {
       const hash = await hashPassword(p1);
       await fetch(FLOW_LYKILORD, {
@@ -435,7 +429,6 @@
       btn.textContent = tab.label;
       btn.onclick = () => switchTab(tab.id, btn);
       tabBar.appendChild(btn);
-
       const panel = document.createElement('div');
       panel.className = 'elko-panel' + (i === 0 ? ' active' : '');
       panel.id = 'panel-' + tab.id;
@@ -486,6 +479,10 @@
         items = items.filter(i => i.Verslun === verslun);
       }
 
+      const nyCount = items.filter(i => (i.Sta_x00f0_a?.Value || i.Sta_x00f0_a) === 'Ný').length;
+      const ivinnCount = items.filter(i => (i.Sta_x00f0_a?.Value || i.Sta_x00f0_a) === 'Í vinnslu').length;
+      const lokidCount = items.filter(i => (i.Sta_x00f0_a?.Value || i.Sta_x00f0_a) === 'Lokið').length;
+
       panel.innerHTML = `
         <div class="elko-filters">
           <select id="filterVerslun" onchange="filterTilkynningar()">
@@ -512,6 +509,11 @@
           </select>
           <button class="elko-btn elko-btn-sm" onclick="loadTilkynningar()">🔄 Uppfæra</button>
         </div>
+        <div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
+          <div style="background:#e3f2fd; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:600; color:#1565c0;">🔵 Ný: ${nyCount}</div>
+          <div style="background:#fff3e0; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:600; color:#e65100;">🟠 Í vinnslu: ${ivinnCount}</div>
+          <div style="background:#e8f5e9; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:600; color:#2e7d32;">🟢 Lokið: ${lokidCount}</div>
+        </div>
         <div class="elko-table-wrap">
           <table>
             <thead>
@@ -525,6 +527,7 @@
                 <th>Tilkynnir</th>
                 <th>Dagsetning</th>
                 <th>Staða</th>
+                <th>Breytt</th>
                 ${['Lagerstjóri', 'Master'].includes(role) ? '<th>Aðgerð</th>' : ''}
               </tr>
             </thead>
@@ -532,9 +535,9 @@
           </table>
         </div>`;
 
-window._allTilkynningar = items;
-renderRedFlags(items);
-renderTilkynningar(items);
+      window._allTilkynningar = items;
+      renderRedFlags(items);
+      renderTilkynningar(items);
 
     } catch(e) {
       panel.innerHTML = '<p style="padding:20px; color:red;">Villa við að sækja tilkynningar.</p>';
@@ -552,46 +555,47 @@ renderTilkynningar(items);
     if (stada) items = items.filter(i => i.Sta_x00f0_a?.Value === stada || i.Sta_x00f0_a === stada);
     if (astæda) items = items.filter(i => i.OData__x00c1_st_x00e6__x00f0_a?.Value === astæda || i.Astæda === astæda);
     renderRedFlags(items);
-renderTilkynningar(items);
+    renderTilkynningar(items);
   }
-function renderRedFlags(items) {
-  const counts = {};
-  items.forEach(i => {
-    const v = i.V_x00f6_run_x00fa_mer || i.Vorunumer || '';
-    if (v) counts[v] = (counts[v] || 0) + 1;
-  });
 
-  const flagged = Object.entries(counts)
-    .filter(([, c]) => c >= 2)
-    .sort((a, b) => b[1] - a[1]);
+  function renderRedFlags(items) {
+    const counts = {};
+    items.forEach(i => {
+      const v = i.V_x00f6_run_x00fa_mer || i.Vorunumer || '';
+      if (v) counts[v] = (counts[v] || 0) + 1;
+    });
 
-  const existing = document.getElementById('redFlagsSection');
-  if (existing) existing.remove();
+    const flagged = Object.entries(counts)
+      .filter(([, c]) => c >= 2)
+      .sort((a, b) => b[1] - a[1]);
 
-  if (!flagged.length) return;
+    const existing = document.getElementById('redFlagsSection');
+    if (existing) existing.remove();
+    if (!flagged.length) return;
 
-  const section = document.createElement('div');
-  section.id = 'redFlagsSection';
-  section.style.cssText = 'background:white; border-radius:10px; padding:16px 20px; margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,0.1); border-left:4px solid #c62828;';
-  section.innerHTML = `
-    <div style="font-weight:700; color:#c62828; margin-bottom:10px; font-size:14px;">⚠️ Endurteknar tilkynningar</div>
-    <div style="display:flex; flex-wrap:wrap; gap:8px;">
-      ${flagged.map(([v, c]) => `
-        <span style="background:${c >= 3 ? '#ffebee' : '#fff8e1'}; border:1px solid ${c >= 3 ? '#ef9a9a' : '#ffe082'}; border-radius:20px; padding:4px 12px; font-size:12px; font-weight:600; color:${c >= 3 ? '#c62828' : '#f57f17'};">
-          ${c >= 3 ? '🔴' : '🟡'} ${v} — ${c} tilkynningar
-        </span>
-      `).join('')}
-    </div>`;
+    const section = document.createElement('div');
+    section.id = 'redFlagsSection';
+    section.style.cssText = 'background:white; border-radius:10px; padding:16px 20px; margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,0.1); border-left:4px solid #c62828;';
+    section.innerHTML = `
+      <div style="font-weight:700; color:#c62828; margin-bottom:10px; font-size:14px;">⚠️ Endurteknar tilkynningar</div>
+      <div style="display:flex; flex-wrap:wrap; gap:8px;">
+        ${flagged.map(([v, c]) => `
+          <span style="background:${c >= 3 ? '#ffebee' : '#fff8e1'}; border:1px solid ${c >= 3 ? '#ef9a9a' : '#ffe082'}; border-radius:20px; padding:4px 12px; font-size:12px; font-weight:600; color:${c >= 3 ? '#c62828' : '#f57f17'};">
+            ${c >= 3 ? '🔴' : '🟡'} ${v} — ${c} tilkynningar
+          </span>
+        `).join('')}
+      </div>`;
 
-  const tableWrap = document.querySelector('#panel-tilkynningar .elko-table-wrap');
-  tableWrap.parentNode.insertBefore(section, tableWrap);
-}
+    const tableWrap = document.querySelector('#panel-tilkynningar .elko-table-wrap');
+    tableWrap.parentNode.insertBefore(section, tableWrap);
+  }
+
   function renderTilkynningar(items) {
     const tbody = document.getElementById('tilkynningarBody');
     const role = currentUser?.Hlutverk?.Value || currentUser?.Hlutverk || '';
 
     if (!items.length) {
-      tbody.innerHTML = '<tr><td colspan="10">Engar tilkynningar fundust.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="11">Engar tilkynningar fundust.</td></tr>';
       return;
     }
 
@@ -599,21 +603,21 @@ function renderRedFlags(items) {
       const stada = r.Sta_x00f0_a?.Value || r.Sta_x00f0_a || '';
       const astæda = r.OData__x00c1_st_x00e6__x00f0_a?.Value || r.Astæda || '';
       const dagur = r.Dagsetning?.split('T')[0] || '';
+      const breytt = r.StadaDagsetning?.split('T')[0] || '';
+      const vorunumer = r.V_x00f6_run_x00fa_mer || r.Vorunumer || '';
+      const count = window._allTilkynningar.filter(i => (i.V_x00f6_run_x00fa_mer || i.Vorunumer) === vorunumer).length;
+      const flag = count >= 3 ? ' 🔴' : count >= 2 ? ' 🟡' : '';
       return `<tr>
         <td>${r.Title || ''}</td>
         <td>${r.Verslun || ''}</td>
-        <td>${(() => {
-  const v = r.V_x00f6_run_x00fa_mer || r.Vorunumer || '';
-  const count = window._allTilkynningar.filter(i => (i.V_x00f6_run_x00fa_mer || i.Vorunumer) === v).length;
-  const flag = count >= 3 ? ' 🔴' : count >= 2 ? ' 🟡' : '';
-  return v + flag;
-})()}</td>
+        <td>${vorunumer}${flag}</td>
         <td>${r.Vara || ''}</td>
         <td>${astæda}</td>
         <td style="max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${r.L_x00fd_sing || r.Lysing || ''}">${r.L_x00fd_sing || r.Lysing || ''}</td>
         <td>${r.Tilkynnir || ''}</td>
         <td>${dagur}</td>
         <td><span class="stada-badge stada-${stada.replace(' ', '.')}">${stada}</span></td>
+        <td style="font-size:12px; color:#666;">${breytt}</td>
         ${['Lagerstjóri', 'Master'].includes(role) ? `
         <td>
           <select onchange="updateStada(${r.ID}, this.value)" style="padding:4px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px;">
@@ -839,13 +843,13 @@ function renderRedFlags(items) {
                 <option>ELKO Grandi</option><option>ELKO Akureyri</option><option>ELKO Flugstöð</option>
               </select>
             </div>
-<div class="elko-field"><label>Viðbótarverslanir</label>
-  <select id="editUserVidbotar" multiple style="height:130px;">
-    <option>ELKO Lindir</option><option>ELKO Smáralind</option><option>ELKO Skeifan</option>
-    <option>ELKO Grandi</option><option>ELKO Akureyri</option><option>ELKO Flugstöð</option>
-  </select>
-  <div style="font-size:11px; color:#999; margin-top:4px;">Haltu Ctrl (eða Cmd) til að velja fleiri en eina</div>
-</div>
+            <div class="elko-field"><label>Viðbótarverslanir</label>
+              <select id="editUserVidbotar" multiple style="height:130px;">
+                <option>ELKO Lindir</option><option>ELKO Smáralind</option><option>ELKO Skeifan</option>
+                <option>ELKO Grandi</option><option>ELKO Akureyri</option><option>ELKO Flugstöð</option>
+              </select>
+              <div style="font-size:11px; color:#999; margin-top:4px;">Haltu Ctrl (eða Cmd) til að velja fleiri en eina</div>
+            </div>
           </div>
           <button class="elko-btn" onclick="saveNotandi()">Vista breytingar</button>
           <button class="elko-btn elko-btn-secondary" style="margin-left:10px;" onclick="document.getElementById('editUserForm').style.display='none'">Hætta við</button>
@@ -862,22 +866,20 @@ function renderRedFlags(items) {
                 <td>${u.Title || ''}</td>
                 <td>${u.Hlutverk?.Value || u.Hlutverk || ''}</td>
                 <td>${u.Verslun || ''}</td>
-                <td>
-  ${(() => {
-    const vidText = Array.isArray(u.Vi_x00f0_b_x00f3_tarVerslun) 
-      ? u.Vi_x00f0_b_x00f3_tarVerslun.map(v => v.Value || v).join(', ') 
-      : u.Vi_x00f0_b_x00f3_tarVerslun || '';
-    return vidText ? `<span title="${vidText}" style="display:inline-block; max-width:150px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:help;">${vidText}</span>` : '';
-  })()}
-</td>
+                <td>${(() => {
+                  const vidText = Array.isArray(u.Vi_x00f0_b_x00f3_tarVerslun)
+                    ? u.Vi_x00f0_b_x00f3_tarVerslun.map(v => v.Value || v).join(', ')
+                    : u.Vi_x00f0_b_x00f3_tarVerslun || '';
+                  return vidText ? `<span title="${vidText}" style="display:inline-block; max-width:150px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:help;">${vidText}</span>` : '';
+                })()}</td>
                 <td>${u.LykilordSett ? '✅' : '❌'}</td>
-<td style="white-space:nowrap;">
-  <div style="display:flex; gap:6px; align-items:center;">
-    <button title="Breyta" onclick="editNotandi(${u.ID})" style="background:#6c757d; border:none; border-radius:4px; padding:5px 8px; cursor:pointer; font-size:14px;">✏️</button>
-    <button title="Endurstilla lykilorð" onclick="resetNotandi(${u.ID}, '${u.Title}')" style="background:#e65100; border:none; border-radius:4px; padding:5px 8px; cursor:pointer; font-size:14px;">🔑</button>
-    <button title="Eyða" onclick="eydaNotanda(${u.ID}, '${u.Title}')" style="background:#c62828; border:none; border-radius:4px; padding:5px 8px; cursor:pointer; font-size:14px;">🗑️</button>
-  </div>
-</td>
+                <td style="white-space:nowrap;">
+                  <div style="display:flex; gap:6px; align-items:center;">
+                    <button title="Breyta" onclick="editNotandi(${u.ID})" style="background:#6c757d; border:none; border-radius:4px; padding:5px 8px; cursor:pointer; font-size:14px;">✏️</button>
+                    <button title="Endurstilla lykilorð" onclick="resetNotandi(${u.ID}, '${u.Title}')" style="background:#e65100; border:none; border-radius:4px; padding:5px 8px; cursor:pointer; font-size:14px;">🔑</button>
+                    <button title="Eyða" onclick="eydaNotanda(${u.ID}, '${u.Title}')" style="background:#c62828; border:none; border-radius:4px; padding:5px 8px; cursor:pointer; font-size:14px;">🗑️</button>
+                  </div>
+                </td>
               </tr>`).join('')}
             </tbody>
           </table>
@@ -896,7 +898,6 @@ function renderRedFlags(items) {
     const hlutverk = document.getElementById('newUserHlutverk').value;
     const verslun = document.getElementById('newUserVerslun').value;
     if (!email || !hlutverk) { notify('dashNotify', 'Fylltu inn netfang og hlutverk.', 'error'); return; }
-
     try {
       const res = await fetch(FLOW_NYR_NOTANDI, {
         method: 'POST',
@@ -913,26 +914,25 @@ function renderRedFlags(items) {
     }
   }
 
-function editNotandi(id) {
-  const u = window._allNotendur.find(x => x.ID === id);
-  if (!u) return;
-  document.getElementById('editUserForm').style.display = 'block';
-  document.getElementById('editUserId').value = id;
-  document.getElementById('editUserEmail').textContent = u.Title;
-  document.getElementById('editUserHlutverk').value = u.Hlutverk?.Value || u.Hlutverk || '';
-  document.getElementById('editUserVerslun').value = u.Verslun || '';
-  const vidEl = document.getElementById('editUserVidbotar');
-  const vidArray = getVidList(u.Vi_x00f0_b_x00f3_tarVerslun);
-  Array.from(vidEl.options).forEach(o => o.selected = vidArray.includes(o.value));
-  document.getElementById('editUserForm').scrollIntoView({ behavior: 'smooth' });
-}
+  function editNotandi(id) {
+    const u = window._allNotendur.find(x => x.ID === id);
+    if (!u) return;
+    document.getElementById('editUserForm').style.display = 'block';
+    document.getElementById('editUserId').value = id;
+    document.getElementById('editUserEmail').textContent = u.Title;
+    document.getElementById('editUserHlutverk').value = u.Hlutverk?.Value || u.Hlutverk || '';
+    document.getElementById('editUserVerslun').value = u.Verslun || '';
+    const vidEl = document.getElementById('editUserVidbotar');
+    const vidArray = getVidList(u.Vi_x00f0_b_x00f3_tarVerslun);
+    Array.from(vidEl.options).forEach(o => o.selected = vidArray.includes(o.value));
+    document.getElementById('editUserForm').scrollIntoView({ behavior: 'smooth' });
+  }
 
   async function saveNotandi() {
     const id = document.getElementById('editUserId').value;
     const hlutverk = document.getElementById('editUserHlutverk').value;
     const verslun = document.getElementById('editUserVerslun').value;
     const vidbotar = Array.from(document.getElementById('editUserVidbotar').selectedOptions).map(o => ({ Value: o.value }));
-
     try {
       await fetch('https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/9b16f9080f27475ba17391b8d520b405/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=2UemCPPB6J2uAbrEsPPBPFLPiB62biqSYprT5yEtj-s', {
         method: 'POST',
@@ -983,7 +983,6 @@ function editNotandi(id) {
   async function sendResetCode() {
     const email = document.getElementById('forgotEmail').value.trim().toLowerCase();
     if (!email) { notify('forgotNotify', 'Sláðu inn netfang.', 'error'); return; }
-
     try {
       const res = await fetch(FLOW_RESET, {
         method: 'POST',
@@ -1005,11 +1004,9 @@ function editNotandi(id) {
     const kodi = document.getElementById('resetCode').value.trim();
     const p1 = document.getElementById('resetPassword1').value;
     const p2 = document.getElementById('resetPassword2').value;
-
     if (!kodi || !p1 || !p2) { notify('resetCodeNotify', 'Fylltu inn alla reiti.', 'error'); return; }
     if (p1 !== p2) { notify('resetCodeNotify', 'Lykilorðin eru ekki eins.', 'error'); return; }
     if (p1.length < 8) { notify('resetCodeNotify', 'Lykilorð verður að vera að minnsta kosti 8 stafir.', 'error'); return; }
-
     try {
       const hash = await hashPassword(p1);
       const res = await fetch(FLOW_STADFESTA_RESET, {
