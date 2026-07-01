@@ -490,8 +490,6 @@ async function loadTilkynningar() {
       const role = currentUser?.Hlutverk?.Value || currentUser?.Hlutverk || '';
       const verslun = currentUser?.Verslun || '';
       const vidbotar = currentUser?.Vi_x00f0_b_x00f3_tarVerslun || '';
-      const verslun = currentUser.Verslun || '';
-      const vidbotar = currentUser.Vi_x00f0_b_x00f3_tarVerslun || '';
 
       if (role === 'Verslunarstjóri') {
         items = items.filter(i => i.Verslun === verslun || i.Verslun === vidbotar);
