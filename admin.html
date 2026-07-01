@@ -827,10 +827,10 @@ function renderRedFlags(items) {
 </td>
                 <td>${u.LykilordSett ? '✅' : '❌'}</td>
 <td style="white-space:nowrap;">
-  <div style="display:flex; flex-direction:column; gap:4px; align-items:flex-start;">
-    <button class="elko-btn elko-btn-sm elko-btn-secondary" onclick="editNotandi(${u.ID})">Breyta</button>
-    <button class="elko-btn elko-btn-sm elko-btn-danger" onclick="resetNotandi(${u.ID}, '${u.Title}')">Endurstilla</button>
-    <button class="elko-btn elko-btn-sm elko-btn-danger" onclick="eydaNotanda(${u.ID}, '${u.Title}')">Eyða</button>
+  <div style="display:flex; gap:6px; align-items:center;">
+    <button title="Breyta" onclick="editNotandi(${u.ID})" style="background:#6c757d; border:none; border-radius:4px; padding:5px 8px; cursor:pointer; font-size:14px;">✏️</button>
+    <button title="Endurstilla lykilorð" onclick="resetNotandi(${u.ID}, '${u.Title}')" style="background:#e65100; border:none; border-radius:4px; padding:5px 8px; cursor:pointer; font-size:14px;">🔑</button>
+    <button title="Eyða" onclick="eydaNotanda(${u.ID}, '${u.Title}')" style="background:#c62828; border:none; border-radius:4px; padding:5px 8px; cursor:pointer; font-size:14px;">🗑️</button>
   </div>
 </td>
               </tr>`).join('')}
