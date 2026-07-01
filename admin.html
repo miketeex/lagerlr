@@ -819,7 +819,8 @@ async function loadNotendur() {
               <td>${u.Vi_x00f0_b_x00f3_tarVerslun || ''}</td>
               <td>${u.LykilordSett ? '✅' : '❌'}</td>
               <td>
-                <button class="elko-btn elko-btn-sm elko-btn-danger" onclick="resetNotandi(${u.ID}, '${u.Title}')">Endurstilla</button>
+               <button class="elko-btn elko-btn-sm elko-btn-danger" onclick="resetNotandi(${u.ID}, '${u.Title}')">Endurstilla</button>
+               <button class="elko-btn elko-btn-sm elko-btn-danger" style="margin-left:4px;" onclick="eydaNotanda(${u.ID}, '${u.Title}')">Eyða</button>
               </td>
             </tr>`).join('')}
           </tbody>
@@ -981,7 +982,21 @@ function restoreSession() {
     showDashboard();
   }
 }
-
+async function eydaNotanda(id, email) {
+  if (!confirm(`Eyða notanda ${email}? Þetta er óafturkræft.`)) return;
+  try {
+    await fetch('https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/b11d96b591ad44f58676de66cb5f3e68/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=XCgTPLuBEZUD8u5033BD5fI7X3-ClEWz6gdXSh1M4j8', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ApiKey: API_KEY, ID: id })
+    });
+    notify('dashNotify', `Notanda ${email} hefur verið eytt.`, 'success');
+    loadNotendur();
+  } catch(e) {
+    notify('dashNotify', 'Villa við að eyða notanda.', 'error');
+    console.error(e);
+  }
+}
 restoreSession();
 </script>
 </body>
