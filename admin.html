@@ -471,7 +471,7 @@
     document.getElementById('panel-' + tab).classList.add('active');
 
     if (tab === 'tilkynningar') loadTilkynningar();
-    if (tab === 'stats') loadStats();
+    if (tab === 'stats') ();
     if (tab === 'notendur') loadNotendur();
   }
 
@@ -620,8 +620,117 @@ async function loadTilkynningar() {
     }
   }
 
-  async function loadStats() {
-    document.getElementById('panel-stats').innerHTML = '<p style="padding:20px;">Hleður tölfræði...</p>';
+async function loadStats() {
+    const panel = document.getElementById('panel-stats');
+    panel.innerHTML = '<p style="padding:20px;">Hleður tölfræði...</p>';
+
+    try {
+      const res = await fetch(FLOW_TILKYNNINGAR, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ApiKey: API_KEY })
+      });
+      const data = await res.json();
+      let items = data.value || data;
+
+      // Filter by role
+      const role = currentUser.Hlutverk?.Value || currentUser.Hlutverk || '';
+      const verslun = currentUser.Verslun || '';
+      const vidbotar = currentUser.Vi_x00f0_b_x00f3_tarVerslun || '';
+
+      if (role === 'Verslunarstjóri') {
+        items = items.filter(i => i.Verslun === verslun || i.Verslun === vidbotar);
+      } else if (role === 'Lagerstjóri') {
+        items = items.filter(i => i.Verslun === verslun);
+      }
+
+      const now = new Date();
+      const today = now.toISOString().split('T')[0];
+      const weekAgo = new Date(now - 7 * 86400000).toISOString().split('T')[0];
+      const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate()).toISOString().split('T')[0];
+      const yearAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate()).toISOString().split('T')[0];
+      const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      const lastMonth = `${now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()}-${String(now.getMonth() === 0 ? 12 : now.getMonth()).padStart(2, '0')}`;
+      const thisYear = `${now.getFullYear()}`;
+      const lastYear = `${now.getFullYear() - 1}`;
+
+      const countByDate = (from) => items.filter(i => (i.Dagsetning || '').split('T')[0] >= from).length;
+      const countByMonth = (m) => items.filter(i => (i.Dagsetning || '').startsWith(m)).length;
+      const countByYear = (y) => items.filter(i => (i.Dagsetning || '').startsWith(y)).length;
+
+      const todayCount = items.filter(i => (i.Dagsetning || '').split('T')[0] === today).length;
+      const weekCount = countByDate(weekAgo);
+      const monthCount = countByMonth(thisMonth);
+      const lastMonthCount = countByMonth(lastMonth);
+      const yearCount = countByYear(thisYear);
+      const lastYearCount = countByYear(lastYear);
+
+      // By ástæða
+      const byAstæda = {};
+      items.forEach(i => {
+        const a = i._x00c1_st_x00e6__x00f0_a?.Value || i.Astæda || 'Óþekkt';
+        byAstæda[a] = (byAstæda[a] || 0) + 1;
+      });
+
+      // By verslun
+      const byVerslun = {};
+      items.forEach(i => {
+        const v = i.Verslun || 'Óþekkt';
+        byVerslun[v] = (byVerslun[v] || 0) + 1;
+      });
+
+      const diff = (a, b) => b === 0 ? '' : ` <span style="font-size:11px; color:${a >= b ? '#2e7d32' : '#c62828'}">${a >= b ? '▲' : '▼'} ${Math.abs(a - b)}</span>`;
+
+      panel.innerHTML = `
+        <h3 style="color:var(--elko-dark); margin-bottom:16px;">Yfirlit</h3>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="number">${todayCount}</div>
+            <div class="label">Í dag</div>
+          </div>
+          <div class="stat-card">
+            <div class="number">${weekCount}</div>
+            <div class="label">Síðustu 7 dagar</div>
+          </div>
+          <div class="stat-card">
+            <div class="number">${monthCount} ${diff(monthCount, lastMonthCount)}</div>
+            <div class="label">Þessi mánuður vs síðasti (${lastMonthCount})</div>
+          </div>
+          <div class="stat-card">
+            <div class="number">${yearCount} ${diff(yearCount, lastYearCount)}</div>
+            <div class="label">Þetta ár vs í fyrra (${lastYearCount})</div>
+          </div>
+          <div class="stat-card">
+            <div class="number">${items.length}</div>
+            <div class="label">Samtals tilkynningar</div>
+          </div>
+        </div>
+
+        <h3 style="color:var(--elko-dark); margin:24px 0 16px;">Eftir ástæðu</h3>
+        <div class="stats-grid">
+          ${Object.entries(byAstæda).map(([k, v]) => `
+            <div class="stat-card">
+              <div class="number">${v}</div>
+              <div class="label">${k}</div>
+            </div>
+          `).join('')}
+        </div>
+
+        <h3 style="color:var(--elko-dark); margin:24px 0 16px;">Eftir verslun</h3>
+        <div class="stats-grid">
+          ${Object.entries(byVerslun).map(([k, v]) => `
+            <div class="stat-card">
+              <div class="number">${v}</div>
+              <div class="label">${k}</div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+
+    } catch(e) {
+      panel.innerHTML = '<p style="padding:20px; color:red;">Villa við að sækja tölfræði.</p>';
+      console.error(e);
+    }
   }
 
   async function loadNotendur() {
