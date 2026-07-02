@@ -276,8 +276,14 @@
           body: JSON.stringify({ Query: query })
         });
         const data = await res.json();
-        const items = data.value || data;
-        renderAutocomplete(items);
+const raw = data.value || data;
+const seen = new Set();
+const items = raw.filter(i => {
+  if (seen.has(i.Title)) return false;
+  seen.add(i.Title);
+  return true;
+});
+renderAutocomplete(items);
       } catch(e) {
         console.error(e);
       }
