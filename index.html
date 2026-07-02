@@ -1,200 +1,145 @@
 <!DOCTYPE html>
 <html lang="is">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ELKO Lagerleiðrétting</title>
-  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-  <style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lagerleiðrétting</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  :root {
+    --primary: #78A22F;
+    --primary-hover: #689326;
+    --primary-light: #A6CF54;
+
+    --bg: #F6F8FA;
+    --surface: #FFFFFF;
+    --card: #FFFFFF;
+    --hover: #F2F5F7;
+    --border: #E3E8EE;
+    --text-primary: #1D232A;
+    --text-secondary: #5C6675;
+    --text-muted: #8D96A4;
+
+    --radius-card: 16px;
+    --radius-btn: 12px;
+    --shadow-sm: 0 2px 6px rgba(0,0,0,.08);
+  }
+
+  @media (prefers-color-scheme: dark) {
     :root {
-      --elko-green: #638b2c;
-      --elko-dark: #00126b;
+      --bg: #181B1F;
+      --surface: #20242A;
+      --card: #262B31;
+      --hover: #2F353D;
+      --border: #343B44;
+      --text-primary: #F5F7FA;
+      --text-secondary: #B0B8C4;
+      --text-muted: #7E8794;
     }
+  }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Open Sans', sans-serif; background: #f9f9f9; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text-primary); font-size: 15px; line-height: 1.5; }
+  [data-lucide] { width: 16px; height: 16px; stroke-width: 1.8; flex-shrink: 0; vertical-align: -3px; }
 
-    .elko-header {
-      background: var(--elko-dark);
-      color: white;
-      padding: 20px 30px;
-    }
+  body.embedded .page-header { display: none; }
 
-    .elko-container { max-width: 700px; margin: 30px auto; padding: 0 20px 40px 20px; }
+  .page-header { display: flex; align-items: center; gap: 12px; padding: 18px 32px; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .page-header img { height: 28px; }
+  .page-header .titles { line-height: 1.25; }
+  .page-header .kicker { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
+  .page-header .title { font-size: 18px; font-weight: 700; }
 
-    .elko-notify {
-      padding: 12px 20px;
-      border-radius: 6px;
-      margin-bottom: 16px;
-      font-size: 14px;
-      display: none;
-    }
+  .container { max-width: 620px; margin: 0 auto; padding: 32px 20px 64px; }
 
-    .elko-notify.success { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; display: block; }
-    .elko-notify.error { background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; display: block; }
+  .notify { padding: 12px 18px; border-radius: var(--radius-btn); margin-bottom: 16px; font-size: 14px; display: none; }
+  .notify.success { background: rgba(56,178,74,0.12); color: #2b8a3e; border: 1px solid rgba(56,178,74,0.3); display: block; }
+  .notify.error { background: rgba(224,83,83,0.12); color: #c0392b; border: 1px solid rgba(224,83,83,0.3); display: block; }
 
-    .elko-card {
-      background: white;
-      border-radius: 10px;
-      padding: 30px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 32px; }
+  .card h2 { font-size: 18px; font-weight: 700; margin-bottom: 22px; }
 
-    .elko-card h2 { color: var(--elko-dark); margin-bottom: 24px; font-size: 18px; }
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary); }
+  .field input, .field select, .field textarea {
+    width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: var(--radius-btn);
+    font-size: 14px; font-family: inherit; background: var(--surface); color: var(--text-primary);
+  }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--primary); outline: none; }
+  .field textarea { resize: vertical; min-height: 100px; }
+  .field .vara-desc { font-size: 12px; color: var(--text-muted); margin-top: 6px; min-height: 16px; }
 
-    .elko-field { margin-bottom: 16px; }
-    .elko-field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #333; }
-    .elko-field input, .elko-field select, .elko-field textarea {
-      width: 100%;
-      padding: 10px;
-      border: 1.5px solid #ddd;
-      border-radius: 6px;
-      font-size: 14px;
-      font-family: 'Open Sans', sans-serif;
-    }
+  .autocomplete-wrapper { position: relative; }
+  .autocomplete-list {
+    position: absolute; top: 100%; left: 0; right: 0;
+    background: var(--surface); border: 1px solid var(--border); border-top: none;
+    border-radius: 0 0 var(--radius-btn) var(--radius-btn);
+    max-height: 220px; overflow-y: auto; z-index: 100; display: none;
+    box-shadow: var(--shadow-sm);
+  }
+  .autocomplete-list.active { display: block; }
+  .autocomplete-item { padding: 9px 14px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--border); }
+  .autocomplete-item:last-child { border-bottom: none; }
+  .autocomplete-item:hover { background: var(--hover); }
+  .autocomplete-item span { color: var(--text-muted); font-size: 11px; margin-left: 8px; }
+  .autocomplete-item.eol { opacity: 0.55; font-style: italic; }
 
-    .elko-field input:focus, .elko-field select:focus, .elko-field textarea:focus {
-      border-color: var(--elko-dark);
-      outline: none;
-    }
+  .store-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 8px; }
+  .store-btn {
+    padding: 14px 8px; border: 1px solid var(--border); border-radius: var(--radius-btn);
+    background: var(--card); color: var(--text-primary); font-family: inherit; font-size: 13px; font-weight: 600;
+    cursor: pointer; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px;
+  }
+  .store-btn [data-lucide] { color: var(--primary); }
+  .store-btn.active, .store-btn:hover { border-color: var(--primary); background: rgba(120,162,47,0.06); }
 
-    .elko-field textarea { resize: vertical; min-height: 100px; }
+  .btn { background: var(--primary); color: #fff; border: none; padding: 12px 24px; border-radius: var(--radius-btn); font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; width: 100%; margin-top: 8px; }
+  .btn:hover { background: var(--primary-hover); }
 
-    .elko-field .vara-desc {
-      font-size: 12px;
-      color: #666;
-      margin-top: 4px;
-      min-height: 18px;
-    }
+  .form-section { display: none; }
+  .form-section.active { display: block; }
 
-    .autocomplete-wrapper { position: relative; }
-
-    .autocomplete-list {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      background: white;
-      border: 1.5px solid var(--elko-dark);
-      border-top: none;
-      border-radius: 0 0 6px 6px;
-      max-height: 200px;
-      overflow-y: auto;
-      z-index: 100;
-      display: none;
-    }
-
-    .autocomplete-list.active { display: block; }
-
-    .autocomplete-item {
-      padding: 8px 12px;
-      font-size: 13px;
-      cursor: pointer;
-      border-bottom: 1px solid #eee;
-    }
-
-    .autocomplete-item:hover { background: #f0f4ff; }
-    .autocomplete-item span { color: #666; font-size: 11px; margin-left: 8px; }
-
-    .store-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-bottom: 24px;
-    }
-
-    .store-btn {
-      padding: 12px 8px;
-      border: 2px solid var(--elko-dark);
-      border-radius: 8px;
-      background: white;
-      color: var(--elko-dark);
-      font-family: 'Open Sans', sans-serif;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      text-align: center;
-    }
-
-    .store-btn.active {
-      background: var(--elko-dark);
-      color: white;
-    }
-
-    .store-btn:hover {
-      background: var(--elko-dark);
-      color: white;
-    }
-
-    .elko-btn {
-      background: var(--elko-green);
-      color: white;
-      border: none;
-      padding: 12px 30px;
-      border-radius: 6px;
-      font-size: 15px;
-      cursor: pointer;
-      font-family: 'Open Sans', sans-serif;
-      width: 100%;
-      margin-top: 8px;
-    }
-
-    
-    .elko-btn:hover { background: #4e6e22; }
-
-    .form-section { display: none; }
-    .form-section.active { display: block; }
-
-    .store-label {
-      font-size: 13px;
-      color: #666;
-      margin-bottom: 16px;
-    }
-
-    .store-label strong { color: var(--elko-dark); }
-
-.autocomplete-item.eol {
-  opacity: 0.5;
-  font-style: italic;
-  pointer-events: auto;
-  cursor: pointer;
-}
-  </style>
+  .store-label { font-size: 13px; color: var(--text-secondary); margin-bottom: 18px; display: flex; align-items: center; gap: 6px; }
+  .store-label strong { color: var(--text-primary); }
+  .store-label a { color: var(--primary); font-size: 12px; margin-left: 6px; text-decoration: underline; }
+</style>
 </head>
 <body>
 
-<div class="elko-header">
-  <img src="images/ELKO_logo_SVG.svg" alt="ELKO" style="height:32px; display:block; margin-bottom:4px;">
-  <div style="font-size:10px; font-weight:400; opacity:0.8; letter-spacing:1px; text-transform:uppercase;">Lager</div>
-  <div style="font-size:22px; font-weight:700;">Lagerleiðrétting</div>
+<div class="page-header">
+  <img src="images/ELKO_logo_SVG.svg" alt="ELKO">
+  <div class="titles">
+    <div class="kicker">Lager</div>
+    <div class="title">Lagerleiðrétting</div>
+  </div>
 </div>
 
-<div class="elko-container">
+<div class="container">
 
-  <div id="notify" class="elko-notify"></div>
+  <div id="notify" class="notify"></div>
 
-  <!-- Store selection -->
   <div id="storeSection">
-    <div class="elko-card">
+    <div class="card">
       <h2>Veldu verslun</h2>
       <div class="store-grid">
-        <button class="store-btn" onclick="selectStore('ELKO Lindir', this)">ELKO Lindir</button>
-        <button class="store-btn" onclick="selectStore('ELKO Smáralind', this)">ELKO Smáralind</button>
-        <button class="store-btn" onclick="selectStore('ELKO Skeifan', this)">ELKO Skeifan</button>
-        <button class="store-btn" onclick="selectStore('ELKO Grandi', this)">ELKO Grandi</button>
-        <button class="store-btn" onclick="selectStore('ELKO Akureyri', this)">ELKO Akureyri</button>
-        <button class="store-btn" onclick="selectStore('ELKO Flugstöð', this)">ELKO Flugstöð</button>
+        <button class="store-btn" onclick="selectStore('ELKO Lindir', this)"><i data-lucide="store"></i>ELKO Lindir</button>
+        <button class="store-btn" onclick="selectStore('ELKO Smáralind', this)"><i data-lucide="store"></i>ELKO Smáralind</button>
+        <button class="store-btn" onclick="selectStore('ELKO Skeifan', this)"><i data-lucide="store"></i>ELKO Skeifan</button>
+        <button class="store-btn" onclick="selectStore('ELKO Grandi', this)"><i data-lucide="store"></i>ELKO Grandi</button>
+        <button class="store-btn" onclick="selectStore('ELKO Akureyri', this)"><i data-lucide="store"></i>ELKO Akureyri</button>
+        <button class="store-btn" onclick="selectStore('ELKO Flugstöð', this)"><i data-lucide="store"></i>ELKO Flugstöð</button>
       </div>
     </div>
   </div>
 
-  <!-- Report form -->
   <div id="formSection" class="form-section">
-    <div class="elko-card">
-      <p class="store-label">Verslun: <strong id="selectedStoreLabel"></strong> <a href="#" onclick="changeStore()" style="font-size:12px; color:var(--elko-dark); margin-left:8px;">Breyta</a></p>
+    <div class="card">
+      <p class="store-label">Verslun: <strong id="selectedStoreLabel"></strong><a href="#" onclick="changeStore()">Breyta</a></p>
       <h2>Tilkynna frávik</h2>
 
-      <div class="elko-field">
+      <div class="field">
         <label>Vörunúmer *</label>
         <div class="autocomplete-wrapper">
           <input type="text" id="vorunumer" placeholder="Sláðu inn vörunúmer..." autocomplete="off" oninput="searchProducts(this.value)">
@@ -203,7 +148,7 @@
         <div class="vara-desc" id="varaDesc"></div>
       </div>
 
-      <div class="elko-field">
+      <div class="field">
         <label>Ástæða *</label>
         <select id="astæda">
           <option value="">-- Veldu ástæðu --</option>
@@ -214,23 +159,28 @@
         </select>
       </div>
 
-      <div class="elko-field">
+      <div class="field">
         <label>Nánari lýsing *</label>
         <textarea id="lysing" placeholder="Útskýrðu hvað málið er og af hverju þú ert að setja inn þessa tilkynningu..."></textarea>
       </div>
 
-      <div class="elko-field">
+      <div class="field">
         <label>Hver tilkynnir *</label>
         <input type="text" id="tilkynnir" placeholder="Sölustafir">
       </div>
 
-      <button class="elko-btn" onclick="submitReport()">Senda tilkynningu</button>
+      <button class="btn" onclick="submitReport()">Senda tilkynningu</button>
     </div>
   </div>
 
 </div>
 
 <script>
+  if (new URLSearchParams(window.location.search).get('embedded') === 'true') {
+    document.body.classList.add('embedded');
+  }
+  if (window.lucide) lucide.createIcons();
+
   const PROXY = 'https://lagerlr-proxy.pruins.workers.dev/api';
   const FLOW_VORULIST = PROXY + '/vorulisti';
   const FLOW_SUBMIT = PROXY + '/senda-tilkynningu';
@@ -243,8 +193,8 @@
   function notify(msg, type) {
     const el = document.getElementById('notify');
     el.textContent = msg;
-    el.className = 'elko-notify ' + type;
-    setTimeout(() => el.className = 'elko-notify', 4000);
+    el.className = 'notify ' + type;
+    setTimeout(() => el.className = 'notify', 4000);
   }
 
   function selectStore(store, btn) {
@@ -279,59 +229,57 @@
           body: JSON.stringify({ Query: query.trim().split(/\s+/)[0] })
         });
         const data = await res.json();
-const raw = data.value || data;
-const words = query.toLowerCase().trim().split(/\s+/);
-const seen = new Set();
-const items = raw.filter(i => {
-  if (seen.has(i.Title)) return false;
-  seen.add(i.Title);
-  const searchText = ((i.Title || '') + ' ' + (i.Vara || '')).toLowerCase();
-  return words.every(w => searchText.includes(w));
-}).slice(0, 20);
-renderAutocomplete(items);
+        const raw = data.value || data;
+        const words = query.toLowerCase().trim().split(/\s+/);
+        const seen = new Set();
+        const items = raw.filter(i => {
+          if (seen.has(i.Title)) return false;
+          seen.add(i.Title);
+          const searchText = ((i.Title || '') + ' ' + (i.Vara || '')).toLowerCase();
+          return words.every(w => searchText.includes(w));
+        }).slice(0, 20);
+        renderAutocomplete(items);
       } catch(e) {
         console.error(e);
       }
     }, 300);
   }
 
-function renderAutocomplete(items) {
-  const list = document.getElementById('autocompleteList');
-  if (!items.length) {
-    list.classList.remove('active');
-    return;
-  }
+  function renderAutocomplete(items) {
+    const list = document.getElementById('autocompleteList');
+    if (!items.length) {
+      list.classList.remove('active');
+      return;
+    }
 
-  items.sort((a, b) => {
-    const aEol = (a.Vara || '').includes('#');
-    const bEol = (b.Vara || '').includes('#');
-    if (aEol && !bEol) return 1;
-    if (!aEol && bEol) return -1;
-    return 0;
-  });
-
-  list.innerHTML = items.map((item, idx) => {
-    const isEol = (item.Vara || '').includes('#');
-    return `<div class="autocomplete-item${isEol ? ' eol' : ''}" data-idx="${idx}">
-      ${item.Title} <span>${item.Vara || ''}${isEol ? ' ⚠️' : ''}</span>
-    </div>`;
-  }).join('');
-
-  // Store items globally for lookup
-  window._autocompleteItems = items;
-
-  // Attach events after rendering
-  list.querySelectorAll('.autocomplete-item').forEach(el => {
-    el.addEventListener('mousedown', (e) => {
-      e.preventDefault();
-      const idx = parseInt(el.dataset.idx);
-      const item = window._autocompleteItems[idx];
-      selectProduct(item.Title, item.Vara || '');
+    items.sort((a, b) => {
+      const aEol = (a.Vara || '').includes('#');
+      const bEol = (b.Vara || '').includes('#');
+      if (aEol && !bEol) return 1;
+      if (!aEol && bEol) return -1;
+      return 0;
     });
-  });
 
-  list.classList.add('active');
-}
+    list.innerHTML = items.map((item, idx) => {
+      const isEol = (item.Vara || '').includes('#');
+      return `<div class="autocomplete-item${isEol ? ' eol' : ''}" data-idx="${idx}">
+        ${item.Title} <span>${item.Vara || ''}${isEol ? ' ⚠️' : ''}</span>
+      </div>`;
+    }).join('');
+
+    window._autocompleteItems = items;
+
+    list.querySelectorAll('.autocomplete-item').forEach(el => {
+      el.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        const idx = parseInt(el.dataset.idx);
+        const item = window._autocompleteItems[idx];
+        selectProduct(item.Title, item.Vara || '');
+      });
+    });
+
+    list.classList.add('active');
+  }
 
   function selectProduct(vorunumer, vara) {
     selectedVorunumer = vorunumer;
