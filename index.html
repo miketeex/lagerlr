@@ -230,9 +230,9 @@
 </div>
 
 <script>
-  const API_KEY = 'Elko-Bankinn-2026-Karamella';
-  const FLOW_VORULIST = 'https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/cb37110e777549edb3015343edb19ab7/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=OMJv86DBHGRkMt3PYFs1e6VUULVLDC-wvRrrwVXNgBc';
-  const FLOW_SUBMIT = 'https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/f2edab4b88714e05865ed0e40c3bb887/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=f9krNOw3as5XVvlqaMNrsyz864i3XSCH3Xbqekfb6E4';
+  const PROXY = 'https://lagerlr-proxy.pruins.workers.dev/api';
+  const FLOW_VORULIST = PROXY + '/vorulisti';
+  const FLOW_SUBMIT = PROXY + '/senda-tilkynningu';
 
   let selectedStore = '';
   let selectedVara = '';
@@ -361,7 +361,6 @@ function renderAutocomplete(items) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ApiKey: API_KEY,
           Verslun: selectedStore,
           Vorunumer: selectedVorunumer,
           Vara: selectedVara,
