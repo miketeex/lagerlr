@@ -109,17 +109,17 @@
     .elko-panel { display: none; }
     .elko-panel.active { display: block; }
 
-.elko-table-wrap { overflow-x: auto; }
+    .elko-table-wrap { overflow-x: auto; }
 
-table {
-  width: 100%;
-  min-width: 950px;   /* ADD THIS — forces scroll instead of squeeze once columns don't fit */
-  border-collapse: collapse;
-  background: white;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
+    table {
+      width: 100%;
+      min-width: 950px;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
 
     th {
       background: var(--elko-dark);
@@ -172,12 +172,12 @@ table {
       margin-top: 4px;
     }
 
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
-  margin-bottom: 24px;
-}
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
 
     .stat-card {
       background: white;
@@ -284,14 +284,18 @@ table {
 </div>
 
 <script>
-  const API_KEY = 'Elko-Bankinn-2026-Karamella';
-  const FLOW_NOTANDI = 'https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/d0039fe1eb5e4016a4aa244f62ca4a61/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=0L3xVMvbAaY5KOIrKAgjjUbpJdn0OSusqITDYaAArD4';
-  const FLOW_LYKILORD = 'https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/9c560b65cbca4d948de93b3598c509b3/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=wRjJMB9d5JJiLw21pNxmvGOJ2XqMDXc8r4o8n3bfXY8';
-  const FLOW_NYR_NOTANDI = 'https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/01484e7be9184e3e9953dac3839df641/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ddG8cuuVhdPyHKIF4R97bd3fvriiuajobLuJ-Y7r8zQ';
-  const FLOW_TILKYNNINGAR = 'https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/b29baea14611487c951ac39436a4fbfc/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ZdWMVmGTeRHQydNyPR400MyxmEcVRD2JaGYNlZXpf_g';
-  const FLOW_UPPFAERA_STODU = 'https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/320020ec7f1b4f978ca0c6530f67d7af/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=acRrJSTcTCnCFzyxGAa71zhWaoF-gbk3erUYbhKbYGc';
-  const FLOW_RESET = 'https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/770eab79ecde41c49c29d39ec3dd4711/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=fZnJKeLKQfjDorHwz_bxhmxtyXRrg84odpNMG5LE_dw';
-  const FLOW_STADFESTA_RESET = 'https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/300e654cb3d54fd1b18f110e315bac4a/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=-_RY8ZbD7UIFCTvenf7s7e_niwHg35IminBItchJ62Q';
+  const PROXY = 'https://lagerlr-proxy.pruins.workers.dev/api';
+  const FLOW_NOTANDI = PROXY + '/notandi';
+  const FLOW_LYKILORD = PROXY + '/lykilord';
+  const FLOW_NYR_NOTANDI = PROXY + '/nyr-notandi';
+  const FLOW_TILKYNNINGAR = PROXY + '/tilkynningar';
+  const FLOW_UPPFAERA_STODU = PROXY + '/uppfaera-stodu';
+  const FLOW_RESET = PROXY + '/reset';
+  const FLOW_STADFESTA_RESET = PROXY + '/stadfesta-reset';
+  const FLOW_NOTENDUR = PROXY + '/notendur';
+  const FLOW_UPPFAERA_NOTANDA = PROXY + '/uppfaera-notanda';
+  const FLOW_ENDURSTILLA_NOTANDA = PROXY + '/endurstilla-notanda';
+  const FLOW_EYDA_NOTANDA = PROXY + '/eyda-notanda';
 
   let currentUser = null;
   let pendingEmail = null;
@@ -464,28 +468,27 @@ table {
       const res = await fetch(FLOW_TILKYNNINGAR, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ApiKey: API_KEY })
+        body: JSON.stringify({})
       });
       const data = await res.json();
       let items = data.value || data;
 
-const role = currentUser?.Hlutverk?.Value || currentUser?.Hlutverk || '';
-const verslun = currentUser?.Verslun || '';
-const vidbotar = currentUser?.Vi_x00f0_b_x00f3_tarVerslun || '';
+      const role = currentUser?.Hlutverk?.Value || currentUser?.Hlutverk || '';
+      const verslun = currentUser?.Verslun || '';
+      const vidbotar = currentUser?.Vi_x00f0_b_x00f3_tarVerslun || '';
 
-if (role === 'Verslunarstjóri') {
-  const vidList = getVidList(vidbotar);
-  items = items.filter(i => i.Verslun === verslun || vidList.includes(i.Verslun));
-} else if (role === 'Lagerstjóri') {
-  items = items.filter(i => i.Verslun === verslun);
-}
+      if (role === 'Verslunarstjóri') {
+        const vidList = getVidList(vidbotar);
+        items = items.filter(i => i.Verslun === verslun || vidList.includes(i.Verslun));
+      } else if (role === 'Lagerstjóri') {
+        items = items.filter(i => i.Verslun === verslun);
+      }
 
-// ADD THIS — sort newest first, using Dagsetning (fallback to Title/LR- id which is also chronological)
-items.sort((a, b) => {
-  const dateA = a.Dagsetning || a.Title || '';
-  const dateB = b.Dagsetning || b.Title || '';
-  return dateB.localeCompare(dateA);
-});
+      items.sort((a, b) => {
+        const dateA = a.Dagsetning || a.Title || '';
+        const dateB = b.Dagsetning || b.Title || '';
+        return dateB.localeCompare(dateA);
+      });
 
       const nyCount = items.filter(i => (i.Sta_x00f0_a?.Value || i.Sta_x00f0_a) === 'Ný').length;
       const ivinnCount = items.filter(i => (i.Sta_x00f0_a?.Value || i.Sta_x00f0_a) === 'Í vinnslu').length;
@@ -645,7 +648,7 @@ items.sort((a, b) => {
       await fetch(FLOW_UPPFAERA_STODU, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ApiKey: API_KEY, ID: id, Stada: stada })
+        body: JSON.stringify({ ID: id, Stada: stada })
       });
       notify('dashNotify', 'Staða uppfærð!', 'success');
       loadTilkynningar();
@@ -664,7 +667,7 @@ items.sort((a, b) => {
       const res = await fetch(FLOW_TILKYNNINGAR, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ApiKey: API_KEY })
+        body: JSON.stringify({})
       });
       const data = await res.json();
       let items = data.value || data;
@@ -730,49 +733,48 @@ items.sort((a, b) => {
         <div class="stats-grid">
           ${Object.entries(byVerslun).map(([k, v]) => `<div class="stat-card"><div class="number">${v}</div><div class="label">${k}</div></div>`).join('')}
         </div>
-<h3 style="color:var(--elko-dark); margin:24px 0 16px;">📈 Vaxandi vandamál</h3>
-${(() => {
-  const watchAstæður = ['Gallað', 'Þjófnaður'];
-  const thirtyDaysAgo = new Date(now - 30 * 86400000).toISOString().split('T')[0];
+        <h3 style="color:var(--elko-dark); margin:24px 0 16px;">📈 Vaxandi vandamál</h3>
+        ${(() => {
+          const watchAstæður = ['Gallað', 'Þjófnaður'];
+          const thirtyDaysAgo = new Date(now - 30 * 86400000).toISOString().split('T')[0];
 
-  const recentItems = items.filter(i =>
-    (i.Dagsetning || '').split('T')[0] >= thirtyDaysAgo &&
-    watchAstæður.includes(i.OData__x00c1_st_x00e6__x00f0_a?.Value || i.Astæda || '')
-  );
+          const recentItems = items.filter(i =>
+            (i.Dagsetning || '').split('T')[0] >= thirtyDaysAgo &&
+            watchAstæður.includes(i.OData__x00c1_st_x00e6__x00f0_a?.Value || i.Astæda || '')
+          );
 
-  // Key by vörunúmer + vara + ástæða, svo Gallað og Þjófnaður teljast sitt í hvoru lagi
-  const counts = {};
-  recentItems.forEach(i => {
-    const astæda = i.OData__x00c1_st_x00e6__x00f0_a?.Value || i.Astæda || '';
-    const key = (i.V_x00f6_run_x00fa_mer || i.Vorunumer || '') + '|' + (i.Vara || '') + '|' + astæda;
-    counts[key] = (counts[key] || 0) + 1;
-  });
+          const counts = {};
+          recentItems.forEach(i => {
+            const astæda = i.OData__x00c1_st_x00e6__x00f0_a?.Value || i.Astæda || '';
+            const key = (i.V_x00f6_run_x00fa_mer || i.Vorunumer || '') + '|' + (i.Vara || '') + '|' + astæda;
+            counts[key] = (counts[key] || 0) + 1;
+          });
 
-  const minFlagCount = 5;
-  const alerts = Object.entries(counts)
-    .map(([key, count]) => {
-      const [vorunumer, vara, astæda] = key.split('|');
-      return { vorunumer, vara, astæda, count };
-    })
-    .filter(x => x.count >= minFlagCount)
-    .sort((a, b) => b.count - a.count);
+          const minFlagCount = 5;
+          const alerts = Object.entries(counts)
+            .map(([key, count]) => {
+              const [vorunumer, vara, astæda] = key.split('|');
+              return { vorunumer, vara, astæda, count };
+            })
+            .filter(x => x.count >= minFlagCount)
+            .sort((a, b) => b.count - a.count);
 
-  if (!alerts.length) return '<p style="color:#666; font-size:13px; padding:8px 0;">Engin vaxandi vandamál fundust síðustu 30 daga.</p>';
+          if (!alerts.length) return '<p style="color:#666; font-size:13px; padding:8px 0;">Engin vaxandi vandamál fundust síðustu 30 daga.</p>';
 
-  return `<div style="display:flex; flex-direction:column; gap:8px;">
-    ${alerts.map(a => `
-      <div style="background:white; border-radius:8px; padding:14px 16px; box-shadow:0 2px 6px rgba(0,0,0,0.08); border-left:4px solid ${a.astæda === 'Þjófnaður' ? '#c62828' : '#e65100'}; display:flex; align-items:center; justify-content:space-between;">
-        <div>
-          <div style="font-weight:700; font-size:14px; color:var(--elko-dark);">${a.astæda === 'Þjófnaður' ? '🔴' : '🟠'} ${a.vorunumer} — ${a.vara}</div>
-          <div style="font-size:12px; color:#666; margin-top:2px;">${a.astæda}: ${a.count} tilkynningar síðustu 30 daga</div>
-        </div>
-        <div style="font-size:11px; font-weight:700; color:${a.astæda === 'Þjófnaður' ? '#c62828' : '#e65100'}; text-align:right;">
-          ▲ Vaxandi
-        </div>
-      </div>
-    `).join('')}
-</div>`;
-})()}`;
+          return `<div style="display:flex; flex-direction:column; gap:8px;">
+            ${alerts.map(a => `
+              <div style="background:white; border-radius:8px; padding:14px 16px; box-shadow:0 2px 6px rgba(0,0,0,0.08); border-left:4px solid ${a.astæda === 'Þjófnaður' ? '#c62828' : '#e65100'}; display:flex; align-items:center; justify-content:space-between;">
+                <div>
+                  <div style="font-weight:700; font-size:14px; color:var(--elko-dark);">${a.astæda === 'Þjófnaður' ? '🔴' : '🟠'} ${a.vorunumer} — ${a.vara}</div>
+                  <div style="font-size:12px; color:#666; margin-top:2px;">${a.astæda}: ${a.count} tilkynningar síðustu 30 daga</div>
+                </div>
+                <div style="font-size:11px; font-weight:700; color:${a.astæda === 'Þjófnaður' ? '#c62828' : '#e65100'}; text-align:right;">
+                  ▲ Vaxandi
+                </div>
+              </div>
+            `).join('')}
+          </div>`;
+        })()}`;
 
     } catch(e) {
       panel.innerHTML = '<p style="padding:20px; color:red;">Villa við að sækja tölfræði.</p>';
@@ -785,10 +787,10 @@ ${(() => {
     panel.innerHTML = '<p style="padding:20px;">Hleður notendur...</p>';
 
     try {
-      const res = await fetch('https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/0b4c35439a374c2f883c52ed6ad88207/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=bmK_6x1GA6IcPXlbEM-JjVMBwPf9BABKCQM6mc5FHic', {
+      const res = await fetch(FLOW_NOTENDUR, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ApiKey: API_KEY })
+        body: JSON.stringify({})
       });
       const data = await res.json();
       const items = data.value || data;
@@ -908,7 +910,7 @@ ${(() => {
       const res = await fetch(FLOW_NYR_NOTANDI, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ApiKey: API_KEY, Notandi: email, Hlutverk: hlutverk, Verslun: verslun })
+        body: JSON.stringify({ Notandi: email, Hlutverk: hlutverk, Verslun: verslun })
       });
       const data = await res.json();
       if (data.error) { notify('dashNotify', 'Notandi er nú þegar til.', 'error'); return; }
@@ -940,10 +942,10 @@ ${(() => {
     const verslun = document.getElementById('editUserVerslun').value;
     const vidbotar = Array.from(document.getElementById('editUserVidbotar').selectedOptions).map(o => ({ Value: o.value }));
     try {
-      await fetch('https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/9b16f9080f27475ba17391b8d520b405/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=2UemCPPB6J2uAbrEsPPBPFLPiB62biqSYprT5yEtj-s', {
+      await fetch(FLOW_UPPFAERA_NOTANDA, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ApiKey: API_KEY, ID: id, Hlutverk: hlutverk, Verslun: verslun, Vidbotar: vidbotar })
+        body: JSON.stringify({ ID: id, Hlutverk: hlutverk, Verslun: verslun, Vidbotar: vidbotar })
       });
       notify('dashNotify', 'Notandi uppfærður!', 'success');
       document.getElementById('editUserForm').style.display = 'none';
@@ -957,10 +959,10 @@ ${(() => {
   async function resetNotandi(id, email) {
     if (!confirm(`Endurstilla lykilorð fyrir ${email}?`)) return;
     try {
-      await fetch('https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/f7014af0b5874162a3eea3040e675a1a/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=CxggGrcP-zW52lue-U96aztwDL9lhx1uTVgDKAr3JFU', {
+      await fetch(FLOW_ENDURSTILLA_NOTANDA, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ApiKey: API_KEY, ID: id })
+        body: JSON.stringify({ ID: id })
       });
       notify('dashNotify', `Lykilorð endurstillt fyrir ${email}.`, 'success');
       loadNotendur();
@@ -973,10 +975,10 @@ ${(() => {
   async function eydaNotanda(id, email) {
     if (!confirm(`Eyða notanda ${email}? Þetta er óafturkræft.`)) return;
     try {
-      await fetch('https://defaultcd368b546ffe4d7dbea9014e728c66.79.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/b11d96b591ad44f58676de66cb5f3e68/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=XCgTPLuBEZUD8u5033BD5fI7X3-ClEWz6gdXSh1M4j8', {
+      await fetch(FLOW_EYDA_NOTANDA, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ApiKey: API_KEY, ID: id })
+        body: JSON.stringify({ ID: id })
       });
       notify('dashNotify', `Notanda ${email} hefur verið eytt.`, 'success');
       loadNotendur();
