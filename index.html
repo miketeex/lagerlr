@@ -151,6 +151,11 @@
     }
 
     .store-label strong { color: var(--elko-dark); }
+
+    .autocomplete-item.eol {
+  opacity: 0.5;
+  font-style: italic;
+}
   </style>
 </head>
 <body>
@@ -279,19 +284,30 @@
     }, 300);
   }
 
-  function renderAutocomplete(items) {
-    const list = document.getElementById('autocompleteList');
-    if (!items.length) {
-      list.classList.remove('active');
-      return;
-    }
-list.innerHTML = items.map(item => `
-  <div class="autocomplete-item" onmousedown="selectProduct('${item.Title}', '${(item.Vara || '').replace(/'/g, "\\'")}')">
-    ${item.Title} <span>${item.Vara || ''}</span>
-  </div>
-`).join('');
-    list.classList.add('active');
+function renderAutocomplete(items) {
+  const list = document.getElementById('autocompleteList');
+  if (!items.length) {
+    list.classList.remove('active');
+    return;
   }
+
+  // Sort: # items (EOL) go to bottom
+  items.sort((a, b) => {
+    const aEol = (a.Vara || '').includes('#');
+    const bEol = (b.Vara || '').includes('#');
+    if (aEol && !bEol) return 1;
+    if (!aEol && bEol) return -1;
+    return 0;
+  });
+
+  list.innerHTML = items.map(item => {
+    const isEol = (item.Vara || '').includes('#');
+    return `<div class="autocomplete-item${isEol ? ' eol' : ''}" onmousedown="selectProduct('${item.Title}', '${(item.Vara || '').replace(/'/g, "\\'")}')">
+      ${item.Title} <span>${item.Vara || ''}${isEol ? ' ⚠️' : ''}</span>
+    </div>`;
+  }).join('');
+  list.classList.add('active');
+}
 
   function selectProduct(vorunumer, vara) {
     selectedVorunumer = vorunumer;
