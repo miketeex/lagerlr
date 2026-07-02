@@ -152,9 +152,11 @@
 
     .store-label strong { color: var(--elko-dark); }
 
-    .autocomplete-item.eol {
+.autocomplete-item.eol {
   opacity: 0.5;
   font-style: italic;
+  pointer-events: auto;
+  cursor: pointer;
 }
   </style>
 </head>
@@ -273,16 +275,18 @@
         const res = await fetch(FLOW_VORULIST, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ Query: query })
+          body: JSON.stringify({ Query: query.trim().split(/\s+/)[0] })
         });
         const data = await res.json();
 const raw = data.value || data;
+const words = query.toLowerCase().trim().split(/\s+/);
 const seen = new Set();
 const items = raw.filter(i => {
   if (seen.has(i.Title)) return false;
   seen.add(i.Title);
-  return true;
-});
+  const searchText = ((i.Title || '') + ' ' + (i.Vara || '')).toLowerCase();
+  return words.every(w => searchText.includes(w));
+}).slice(0, 20);
 renderAutocomplete(items);
       } catch(e) {
         console.error(e);
