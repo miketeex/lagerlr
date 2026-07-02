@@ -301,7 +301,6 @@ function renderAutocomplete(items) {
     return;
   }
 
-  // Sort: # items (EOL) go to bottom
   items.sort((a, b) => {
     const aEol = (a.Vara || '').includes('#');
     const bEol = (b.Vara || '').includes('#');
@@ -310,12 +309,26 @@ function renderAutocomplete(items) {
     return 0;
   });
 
-  list.innerHTML = items.map(item => {
+  list.innerHTML = items.map((item, idx) => {
     const isEol = (item.Vara || '').includes('#');
-    return `<div class="autocomplete-item${isEol ? ' eol' : ''}" onmousedown="selectProduct('${item.Title}', '${(item.Vara || '').replace(/'/g, "\\'")}')">
+    return `<div class="autocomplete-item${isEol ? ' eol' : ''}" data-idx="${idx}">
       ${item.Title} <span>${item.Vara || ''}${isEol ? ' ⚠️' : ''}</span>
     </div>`;
   }).join('');
+
+  // Store items globally for lookup
+  window._autocompleteItems = items;
+
+  // Attach events after rendering
+  list.querySelectorAll('.autocomplete-item').forEach(el => {
+    el.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      const idx = parseInt(el.dataset.idx);
+      const item = window._autocompleteItems[idx];
+      selectProduct(item.Title, item.Vara || '');
+    });
+  });
+
   list.classList.add('active');
 }
 
