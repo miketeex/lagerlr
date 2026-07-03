@@ -544,6 +544,7 @@
   const FLOW_VIDHENGI = PROXY + '/vidhengi';
   const FLOW_BAETA_VID_VIDHENGI = PROXY + '/baeta-vid-vidhengi';
   const FLOW_EYDA_VIDHENGI = PROXY + '/eyda-vidhengi';
+  const FLOW_VIDHENGI_INNIHALD = PROXY + '/vidhengi-innihald';
 
   let currentUser = null;
   let pendingEmail = null;
@@ -663,7 +664,7 @@
       list.innerHTML = items.map(a => `
         <div class="attachment-item">
           <i data-lucide="paperclip"></i>
-          <a href="${a.AbsoluteUri}" target="_blank" rel="noopener">${a.DisplayName}</a>
+          <a href="#" onclick="openAttachment('${a.DisplayName.replace(/'/g, "\\'")}'); return false;">${a.DisplayName}</a>
           ${canDelete ? `<button class="icon-action-btn icon-action-danger" onclick="deleteAttachment('${a.DisplayName.replace(/'/g, "\\'")}')"><i data-lucide="trash-2" style="width:14px; height:14px;"></i></button>` : ''}
         </div>`).join('');
       if (window.lucide) lucide.createIcons();
@@ -699,6 +700,42 @@
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
+  }
+
+  function guessMimeType(fileName) {
+    const ext = (fileName.split('.').pop() || '').toLowerCase();
+    if (ext === 'jpg' || ext === 'jpeg') return 'image/jpeg';
+    if (ext === 'png') return 'image/png';
+    if (ext === 'pdf') return 'application/pdf';
+    return 'application/octet-stream';
+  }
+
+  function base64ToBlob(base64, mimeType) {
+    const byteChars = atob(base64);
+    const byteNumbers = new Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
+    const byteArray = new Uint8Array(byteNumbers);
+    return new Blob([byteArray], { type: mimeType });
+  }
+
+  async function openAttachment(fileName) {
+    try {
+      const res = await fetch(FLOW_VIDHENGI_INNIHALD, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ TilkynningID: currentCommentsTilkynningId, FileName: fileName })
+      });
+      const data = await res.json();
+      const base64 = data.FileContent;
+      if (!base64) { notify('dashNotify', 'Ekki tókst að sækja viðhengi.', 'error'); return; }
+      const blob = base64ToBlob(base64, guessMimeType(fileName));
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch(e) {
+      notify('dashNotify', 'Villa við að sækja viðhengi.', 'error');
+      console.error(e);
+    }
   }
 
   async function deleteAttachment(fileName) {
