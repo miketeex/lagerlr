@@ -13,7 +13,7 @@
          HTML below. Redefining them here re-themes the whole page. */
       --elko-green: #78A22F;
       --elko-dark: #163019;
-      
+
       --primary: #78A22F;
       --primary-hover: #689326;
 
@@ -1073,6 +1073,22 @@
       const ytdThisByAstaeda = countByAstaedaInRange(toISO(startOfThisYear), today);
       const ytdLastByAstaeda = countByAstaedaInRange(toISO(startOfLastYear), toISO(lastYearCutoff));
 
+      const verslunList = ['ELKO Lindir', 'ELKO Smáralind', 'ELKO Skeifan', 'ELKO Grandi', 'ELKO Akureyri', 'ELKO Flugstöð'];
+      const countByVerslunInRange = (from, to) => {
+        const result = {};
+        verslunList.forEach(v => result[v] = 0);
+        items.forEach(i => {
+          const d = (i.Dagsetning || '').split('T')[0];
+          const v = i.Verslun || '';
+          if (d >= from && d <= to && verslunList.includes(v)) result[v]++;
+        });
+        return result;
+      };
+      const mtdThisByVerslun = countByVerslunInRange(toISO(startOfThisMonth), today);
+      const mtdLastByVerslun = countByVerslunInRange(toISO(startOfLastMonth), toISO(lastMonthCutoff));
+      const ytdThisByVerslun = countByVerslunInRange(toISO(startOfThisYear), today);
+      const ytdLastByVerslun = countByVerslunInRange(toISO(startOfLastYear), toISO(lastYearCutoff));
+
       panel.innerHTML = `
         <h3 class="section-title"><i data-lucide="bar-chart-3"></i>Yfirlit</h3>
         <div class="stats-grid">
@@ -1096,8 +1112,17 @@
           ${astaedaList.map(a => `<div class="stat-card"><div class="number">${byAstæda[a] || 0}</div><div class="label">${a}</div></div>`).join('')}
         </div>
         <h3 class="section-title"><i data-lucide="store"></i>Eftir verslun</h3>
+        <div class="subsection-label">MTD — það sem af er mánuði</div>
         <div class="stats-grid">
-          ${Object.entries(byVerslun).map(([k, v]) => `<div class="stat-card"><div class="number">${v}</div><div class="label">${k}</div></div>`).join('')}
+          ${verslunList.map(v => `<div class="stat-card"><div class="number">${mtdThisByVerslun[v]}${diff(mtdThisByVerslun[v], mtdLastByVerslun[v])}</div><div class="label">${v}</div></div>`).join('')}
+        </div>
+        <div class="subsection-label">YTD — það sem af er ári</div>
+        <div class="stats-grid">
+          ${verslunList.map(v => `<div class="stat-card"><div class="number">${ytdThisByVerslun[v]}${diff(ytdThisByVerslun[v], ytdLastByVerslun[v])}</div><div class="label">${v}</div></div>`).join('')}
+        </div>
+        <div class="subsection-label">Frá upphafi (alltime)</div>
+        <div class="stats-grid">
+          ${verslunList.map(v => `<div class="stat-card"><div class="number">${byVerslun[v] || 0}</div><div class="label">${v}</div></div>`).join('')}
         </div>
         <h3 class="section-title"><i data-lucide="trending-up"></i>Vaxandi vandamál</h3>
         ${(() => {
