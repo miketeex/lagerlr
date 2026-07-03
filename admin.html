@@ -457,6 +457,27 @@
     if (el) el.classList.remove('active');
   }
 
+  let tilkynningarRawCache = null;
+  let tilkynningarRawCacheTime = 0;
+  const TILKYNNINGAR_CACHE_TTL_MS = 20000;
+
+  async function fetchTilkynningarRaw(forceRefresh = false) {
+    const now = Date.now();
+    if (!forceRefresh && tilkynningarRawCache && (now - tilkynningarRawCacheTime) < TILKYNNINGAR_CACHE_TTL_MS) {
+      return tilkynningarRawCache;
+    }
+    const res = await fetch(FLOW_TILKYNNINGAR, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    const data = await res.json();
+    const items = data.value || data;
+    tilkynningarRawCache = items;
+    tilkynningarRawCacheTime = now;
+    return items;
+  }
+
   function getTkField(r, key) {
     switch (key) {
       case 'tilvisun': return r.Title || '';
@@ -659,7 +680,7 @@
     return [vidbotar];
   }
 
-  async function loadTilkynningar(resetPage = true, silent = false) {
+  async function loadTilkynningar(resetPage = true, silent = false, forceRefresh = false) {
     if (!currentUser) return;
     const panel = document.getElementById('panel-tilkynningar');
     const skeletonExists = !!document.getElementById('tilkynningarBody');
@@ -671,13 +692,7 @@
     }
 
     try {
-      const res = await fetch(FLOW_TILKYNNINGAR, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({})
-      });
-      const data = await res.json();
-      let items = data.value || data;
+      let items = await fetchTilkynningarRaw(forceRefresh);
 
       const role = currentUser?.Hlutverk?.Value || currentUser?.Hlutverk || '';
       const verslun = currentUser?.Verslun || '';
@@ -688,6 +703,8 @@
         items = items.filter(i => i.Verslun === verslun || vidList.includes(i.Verslun));
       } else if (role === 'Lagerstjóri') {
         items = items.filter(i => i.Verslun === verslun);
+      } else {
+        items = [...items];
       }
 
       items.sort((a, b) => {
@@ -734,7 +751,7 @@
               <option>Þjófnaður</option>
               <option>Lagerleiðrétting</option>
             </select>
-            <button class="elko-btn elko-btn-secondary elko-btn-sm" onclick="loadTilkynningar(true, true)"><i data-lucide="refresh-cw" style="width:14px; height:14px;"></i> Uppfæra</button>
+            <button class="elko-btn elko-btn-secondary elko-btn-sm" onclick="loadTilkynningar(true, true, true)"><i data-lucide="refresh-cw" style="width:14px; height:14px;"></i> Uppfæra</button>
           </div>
           <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
             <div style="background:var(--badge-info-bg); border-radius:var(--radius-btn); padding:8px 16px; font-size:13px; font-weight:600; color:var(--badge-info-text); display:flex; align-items:center; gap:8px;"><span style="width:8px; height:8px; border-radius:50%; background:#2D9CDB; display:inline-block;"></span><span id="countNy">Ný: ${nyCount}</span></div>
@@ -962,7 +979,7 @@
         body: JSON.stringify({ ID: id, Stada: stada })
       });
       notify('dashNotify', 'Staða uppfærð!', 'success');
-      loadTilkynningar(false, true);
+      loadTilkynningar(false, true, true);
     } catch(e) {
       notify('dashNotify', 'Villa við að uppfæra stöðu.', 'error');
       console.error(e);
@@ -980,13 +997,7 @@
     }
 
     try {
-      const res = await fetch(FLOW_TILKYNNINGAR, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({})
-      });
-      const data = await res.json();
-      let items = data.value || data;
+      let items = await fetchTilkynningarRaw(false);
 
       const role = currentUser?.Hlutverk?.Value || currentUser?.Hlutverk || '';
       const verslun = currentUser?.Verslun || '';
