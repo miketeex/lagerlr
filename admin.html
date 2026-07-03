@@ -1090,7 +1090,7 @@
         <td>${r.Tilkynnir || ''}</td>
         <td>${dagur}</td>
         <td><span class="stada-badge stada-${stada.replace(' ', '.')}">${stada}</span></td>
-        <td style="font-size:12px; color:var(--text-muted);">${breytt}</td>
+        <td style="font-size:12px; color:var(--text-muted);" title="${r.BreyttAf ? 'Breytt af: ' + r.BreyttAf : ''}">${breytt}${r.BreyttAf ? ` <span style="color:var(--text-secondary);">(${r.BreyttAf})</span>` : ''}</td>
         ${['Lagerstjóri', 'Master'].includes(role) ? `
         <td>
           <select onchange="updateStada(${r.ID}, this.value)" style="padding:5px 8px; border:1px solid var(--border); border-radius:8px; font-size:12px; font-family:inherit; background:var(--surface); color:var(--text-primary);">
@@ -1139,11 +1139,12 @@
 
   async function updateStada(id, stada) {
     if (!stada) return;
+    const breyttAf = currentUser?.Title || '';
     try {
       await fetch(FLOW_UPPFAERA_STODU, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ID: id, Stada: stada })
+        body: JSON.stringify({ ID: id, Stada: stada, BreyttAf: breyttAf })
       });
       notify('dashNotify', 'Staða uppfærð!', 'success');
       loadTilkynningar(false, true, true);
