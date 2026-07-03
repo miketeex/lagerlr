@@ -13,10 +13,10 @@
          HTML below. Redefining them here re-themes the whole page. */
       --elko-green: #78A22F;
       --elko-dark: #163019;
-      
+
       --primary: #78A22F;
       --primary-hover: #689326;
-      
+
       --bg: #F6F8FA;
       --surface: #FFFFFF;
       --card: #FFFFFF;
@@ -570,10 +570,14 @@
     return [vidbotar];
   }
 
-  async function loadTilkynningar(resetPage = true) {
+  async function loadTilkynningar(resetPage = true, silent = false) {
     if (!currentUser) return;
     const panel = document.getElementById('panel-tilkynningar');
-    panel.innerHTML = '<p style="padding:20px;">Hleður tilkynningar...</p>';
+    const skeletonExists = !!document.getElementById('tilkynningarBody');
+
+    if (!silent || !skeletonExists) {
+      panel.innerHTML = '<p style="padding:20px;">Hleður tilkynningar...</p>';
+    }
 
     try {
       const res = await fetch(FLOW_TILKYNNINGAR, {
@@ -605,58 +609,67 @@
       const ivinnCount = items.filter(i => (i.Sta_x00f0_a?.Value || i.Sta_x00f0_a) === 'Í vinnslu').length;
       const lokidCount = items.filter(i => (i.Sta_x00f0_a?.Value || i.Sta_x00f0_a) === 'Lokið').length;
 
-      panel.innerHTML = `
-        <div class="elko-filters">
-          <select id="filterVerslun" onchange="filterTilkynningar()">
-            <option value="">Allar verslanir</option>
-            <option>ELKO Lindir</option>
-            <option>ELKO Smáralind</option>
-            <option>ELKO Skeifan</option>
-            <option>ELKO Grandi</option>
-            <option>ELKO Akureyri</option>
-            <option>ELKO Flugstöð</option>
-          </select>
-          <select id="filterStada" onchange="filterTilkynningar()">
-            <option value="">Allar stöður</option>
-            <option>Ný</option>
-            <option>Í vinnslu</option>
-            <option>Lokið</option>
-          </select>
-          <select id="filterAstæda" onchange="filterTilkynningar()">
-            <option value="">Allar ástæður</option>
-            <option>Gallað</option>
-            <option>Ósöluhæft</option>
-            <option>Þjófnaður</option>
-            <option>Lagerleiðrétting</option>
-          </select>
-          <button class="elko-btn elko-btn-secondary elko-btn-sm" onclick="loadTilkynningar()"><i data-lucide="refresh-cw" style="width:14px; height:14px;"></i> Uppfæra</button>
-        </div>
-        <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
-          <div style="background:var(--badge-info-bg); border-radius:var(--radius-btn); padding:8px 16px; font-size:13px; font-weight:600; color:var(--badge-info-text); display:flex; align-items:center; gap:8px;"><span style="width:8px; height:8px; border-radius:50%; background:#2D9CDB; display:inline-block;"></span>Ný: ${nyCount}</div>
-          <div style="background:var(--badge-warning-bg); border-radius:var(--radius-btn); padding:8px 16px; font-size:13px; font-weight:600; color:var(--badge-warning-text); display:flex; align-items:center; gap:8px;"><span style="width:8px; height:8px; border-radius:50%; background:#F4B740; display:inline-block;"></span>Í vinnslu: ${ivinnCount}</div>
-          <div style="background:var(--badge-success-bg); border-radius:var(--radius-btn); padding:8px 16px; font-size:13px; font-weight:600; color:var(--badge-success-text); display:flex; align-items:center; gap:8px;"><span style="width:8px; height:8px; border-radius:50%; background:#38B24A; display:inline-block;"></span>Lokið: ${lokidCount}</div>
-        </div>
-        <div class="elko-table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Tilvísun</th>
-                <th>Verslun</th>
-                <th>Vörunúmer</th>
-                <th>Vara</th>
-                <th>Ástæða</th>
-                <th>Lýsing</th>
-                <th>Tilkynnir</th>
-                <th>Dagsetning</th>
-                <th>Staða</th>
-                <th>Breytt</th>
-                ${['Lagerstjóri', 'Master'].includes(role) ? '<th>Aðgerð</th>' : ''}
-              </tr>
-            </thead>
-            <tbody id="tilkynningarBody"></tbody>
-          </table>
-        </div>
-        <div id="tilkynningarPagination" style="display:flex; align-items:center; justify-content:space-between; margin-top:14px; font-size:13px; color:var(--text-secondary);"></div>`;
+      if (silent && skeletonExists) {
+        const nyEl = document.getElementById('countNy');
+        const ivinnEl = document.getElementById('countIvinnslu');
+        const lokidEl = document.getElementById('countLokid');
+        if (nyEl) nyEl.textContent = 'Ný: ' + nyCount;
+        if (ivinnEl) ivinnEl.textContent = 'Í vinnslu: ' + ivinnCount;
+        if (lokidEl) lokidEl.textContent = 'Lokið: ' + lokidCount;
+      } else {
+        panel.innerHTML = `
+          <div class="elko-filters">
+            <select id="filterVerslun" onchange="filterTilkynningar()">
+              <option value="">Allar verslanir</option>
+              <option>ELKO Lindir</option>
+              <option>ELKO Smáralind</option>
+              <option>ELKO Skeifan</option>
+              <option>ELKO Grandi</option>
+              <option>ELKO Akureyri</option>
+              <option>ELKO Flugstöð</option>
+            </select>
+            <select id="filterStada" onchange="filterTilkynningar()">
+              <option value="">Allar stöður</option>
+              <option>Ný</option>
+              <option>Í vinnslu</option>
+              <option>Lokið</option>
+            </select>
+            <select id="filterAstæda" onchange="filterTilkynningar()">
+              <option value="">Allar ástæður</option>
+              <option>Gallað</option>
+              <option>Ósöluhæft</option>
+              <option>Þjófnaður</option>
+              <option>Lagerleiðrétting</option>
+            </select>
+            <button class="elko-btn elko-btn-secondary elko-btn-sm" onclick="loadTilkynningar()"><i data-lucide="refresh-cw" style="width:14px; height:14px;"></i> Uppfæra</button>
+          </div>
+          <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
+            <div style="background:var(--badge-info-bg); border-radius:var(--radius-btn); padding:8px 16px; font-size:13px; font-weight:600; color:var(--badge-info-text); display:flex; align-items:center; gap:8px;"><span style="width:8px; height:8px; border-radius:50%; background:#2D9CDB; display:inline-block;"></span><span id="countNy">Ný: ${nyCount}</span></div>
+            <div style="background:var(--badge-warning-bg); border-radius:var(--radius-btn); padding:8px 16px; font-size:13px; font-weight:600; color:var(--badge-warning-text); display:flex; align-items:center; gap:8px;"><span style="width:8px; height:8px; border-radius:50%; background:#F4B740; display:inline-block;"></span><span id="countIvinnslu">Í vinnslu: ${ivinnCount}</span></div>
+            <div style="background:var(--badge-success-bg); border-radius:var(--radius-btn); padding:8px 16px; font-size:13px; font-weight:600; color:var(--badge-success-text); display:flex; align-items:center; gap:8px;"><span style="width:8px; height:8px; border-radius:50%; background:#38B24A; display:inline-block;"></span><span id="countLokid">Lokið: ${lokidCount}</span></div>
+          </div>
+          <div class="elko-table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tilvísun</th>
+                  <th>Verslun</th>
+                  <th>Vörunúmer</th>
+                  <th>Vara</th>
+                  <th>Ástæða</th>
+                  <th>Lýsing</th>
+                  <th>Tilkynnir</th>
+                  <th>Dagsetning</th>
+                  <th>Staða</th>
+                  <th>Breytt</th>
+                  ${['Lagerstjóri', 'Master'].includes(role) ? '<th>Aðgerð</th>' : ''}
+                </tr>
+              </thead>
+              <tbody id="tilkynningarBody"></tbody>
+            </table>
+          </div>
+          <div id="tilkynningarPagination" style="display:flex; align-items:center; justify-content:space-between; margin-top:14px; font-size:13px; color:var(--text-secondary);"></div>`;
+      }
 
       window._allTilkynningar = items;
       if (resetPage) tilkynningarPage = 1;
@@ -811,7 +824,7 @@
         body: JSON.stringify({ ID: id, Stada: stada })
       });
       notify('dashNotify', 'Staða uppfærð!', 'success');
-      loadTilkynningar(false);
+      loadTilkynningar(false, true);
     } catch(e) {
       notify('dashNotify', 'Villa við að uppfæra stöðu.', 'error');
       console.error(e);
