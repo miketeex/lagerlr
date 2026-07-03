@@ -728,7 +728,11 @@
       const breytt = r.StadaDagsetning?.split('T')[0] || '';
       const vorunumer = r.V_x00f6_run_x00fa_mer || r.Vorunumer || '';
       const count = window._allTilkynningar.filter(i => (i.V_x00f6_run_x00fa_mer || i.Vorunumer) === vorunumer).length;
-      const flag = count >= 3 ? ' 🔴' : count >= 2 ? ' 🟡' : '';
+      const flag = count >= 3
+        ? ` <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#E05353; margin-left:4px; vertical-align:middle;"></span>`
+        : count >= 2
+        ? ` <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#F4B740; margin-left:4px; vertical-align:middle;"></span>`
+        : '';
       return `<tr>
         <td>${r.Title || ''}</td>
         <td>${r.Verslun || ''}</td>
