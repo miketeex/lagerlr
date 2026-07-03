@@ -206,6 +206,12 @@
         <input type="text" id="tilkynnir" placeholder="Sölustafir">
       </div>
 
+      <div class="field">
+        <label>Viðhengi (valfrjálst)</label>
+        <input type="file" id="vidhengi" accept="image/jpeg,image/png,application/pdf">
+        <div class="vara-desc">Mynd eða PDF, t.d. ljósmynd af skemmd eða kvittun.</div>
+      </div>
+
       <div class="step-actions">
         <button class="btn btn-secondary" onclick="goStep(2)">← Til baka</button>
         <button class="btn" onclick="submitReport()">Senda tilkynningu</button>
@@ -224,6 +230,7 @@
   const PROXY = 'https://lagerlr-proxy.pruins.workers.dev/api';
   const FLOW_VORULIST = PROXY + '/vorulisti';
   const FLOW_SUBMIT = PROXY + '/senda-tilkynningu';
+  const FLOW_BAETA_VID_VIDHENGI = PROXY + '/baeta-vid-vidhengi';
 
   let selectedStore = '';
   let selectedAstaeda = '';
@@ -346,16 +353,27 @@
     }
   });
 
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
   async function submitReport() {
     const lysing = document.getElementById('lysing').value.trim();
     const tilkynnir = document.getElementById('tilkynnir').value.trim();
+    const fileInput = document.getElementById('vidhengi');
+    const file = fileInput.files[0];
 
     if (!selectedVorunumer) { notify('Veldu vöru úr listanum.', 'error'); return; }
     if (!lysing) { notify('Skrifaðu nánari lýsingu.', 'error'); return; }
     if (!tilkynnir) { notify('Skráðu nafn tilkynnanda.', 'error'); return; }
 
     try {
-      await fetch(FLOW_SUBMIT, {
+      const res = await fetch(FLOW_SUBMIT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -367,22 +385,45 @@
           Tilkynnir: tilkynnir
         })
       });
+      const data = await res.json();
+      const newId = data?.ID;
+
+      if (file && newId) {
+        try {
+          const base64 = await fileToBase64(file);
+          await fetch(FLOW_BAETA_VID_VIDHENGI, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ TilkynningID: newId, FileName: file.name, FileContent: base64 })
+          });
+        } catch(fileErr) {
+          console.error('Villa við að hlaða upp viðhengi', fileErr);
+          notify('Tilkynning send, en viðhengi tókst ekki að hlaða upp.', 'error');
+          resetForm();
+          return;
+        }
+      }
 
       notify('Tilkynning send!', 'success');
-      document.getElementById('vorunumer').value = '';
-      document.getElementById('varaDesc').textContent = '';
-      document.getElementById('lysing').value = '';
-      document.getElementById('tilkynnir').value = '';
-      selectedVorunumer = '';
-      selectedVara = '';
-      selectedAstaeda = '';
-      selectedStore = '';
-      document.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('active'));
-      goStep(1);
+      resetForm();
     } catch(e) {
       notify('Villa við að senda tilkynningu. Reyndu aftur.', 'error');
       console.error(e);
     }
+  }
+
+  function resetForm() {
+    document.getElementById('vorunumer').value = '';
+    document.getElementById('varaDesc').textContent = '';
+    document.getElementById('lysing').value = '';
+    document.getElementById('tilkynnir').value = '';
+    document.getElementById('vidhengi').value = '';
+    selectedVorunumer = '';
+    selectedVara = '';
+    selectedAstaeda = '';
+    selectedStore = '';
+    document.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('active'));
+    goStep(1);
   }
 </script>
 
