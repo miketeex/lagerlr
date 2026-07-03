@@ -383,6 +383,27 @@
     }
     .admin-dropzone:hover { border-color: var(--elko-green); }
     .admin-dropzone [data-lucide] { width: 18px; height: 18px; color: var(--elko-green); margin-bottom: 4px; }
+
+    .preview-modal { position: relative; max-width: 92vw; max-height: 92vh; display: flex; align-items: center; justify-content: center; }
+    .preview-close {
+      position: absolute; top: -44px; right: 0;
+      background: var(--card); border: 1px solid var(--border);
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-secondary); cursor: pointer;
+    }
+    .preview-close:hover { color: var(--text-primary); }
+    #previewContent { display: flex; align-items: center; justify-content: center; overflow: auto; max-width: 92vw; max-height: 92vh; }
+    #previewContent img {
+      max-width: 92vw; max-height: 92vh; border-radius: var(--radius-card);
+      cursor: zoom-in; object-fit: contain; display: block;
+    }
+    #previewContent img.zoomed { max-width: none; max-height: none; cursor: zoom-out; }
+    #previewContent iframe {
+      width: 85vw; height: 85vh; border: none; border-radius: var(--radius-card); background: white;
+    }
+    #previewContent .preview-fallback { background: var(--card); border-radius: var(--radius-card); padding: 30px; text-align: center; color: var(--text-secondary); font-size: 13px; }
+    #previewContent .preview-fallback a { color: var(--elko-green); font-weight: 600; }
   </style>
 </head>
 <body>
@@ -518,6 +539,13 @@
         <div>Smelltu til að hlaða upp viðhengi</div>
       </div>
     </div>
+  </div>
+</div>
+
+<div class="overlay" id="previewOverlay" onclick="if(event.target===this) closePreview();">
+  <div class="preview-modal">
+    <button class="modal-close preview-close" onclick="closePreview()"><i data-lucide="x" style="width:18px; height:18px;"></i></button>
+    <div id="previewContent"></div>
   </div>
 </div>
 
@@ -696,7 +724,7 @@
       list.innerHTML = items.map(a => `
         <div class="attachment-item">
           <i data-lucide="paperclip"></i>
-          <a href="#" onclick="openAttachment('${a.Id.replace(/'/g, "\\'")}'); return false;">${a.DisplayName}</a>
+          <a href="#" onclick="openAttachment('${a.Id.replace(/'/g, "\\'")}', '${a.DisplayName.replace(/'/g, "\\'")}'); return false;">${a.DisplayName}</a>
           ${canDelete ? `<button class="icon-action-btn icon-action-danger" onclick="deleteAttachment('${a.Id.replace(/'/g, "\\'")}', '${a.DisplayName.replace(/'/g, "\\'")}')"><i data-lucide="trash-2" style="width:14px; height:14px;"></i></button>` : ''}
         </div>`).join('');
       if (window.lucide) lucide.createIcons();
@@ -752,25 +780,47 @@
     return new Blob([byteArray], { type: mimeType });
   }
 
-  async function openAttachment(fileName) {
+  async function openAttachment(id, displayName) {
     try {
       const res = await fetch(FLOW_VIDHENGI_INNIHALD, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ TilkynningID: currentCommentsTilkynningId, FileName: fileName })
+        body: JSON.stringify({ TilkynningID: currentCommentsTilkynningId, FileName: id })
       });
       const data = await res.json();
       const base64 = data.FileContent;
       if (!base64) { notify('dashNotify', 'Ekki tókst að sækja viðhengi.', 'error'); return; }
-      const blob = base64ToBlob(base64, guessMimeType(fileName));
+      const mime = guessMimeType(displayName || id);
+      const blob = base64ToBlob(base64, mime);
       const url = URL.createObjectURL(blob);
-      window.open(url, '_blank');
-      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      showPreview(url, mime, displayName || id);
     } catch(e) {
       notify('dashNotify', 'Villa við að sækja viðhengi.', 'error');
       console.error(e);
     }
   }
+
+  function showPreview(url, mime, displayName) {
+    const content = document.getElementById('previewContent');
+    if (mime === 'application/pdf') {
+      content.innerHTML = `<iframe src="${url}"></iframe>`;
+    } else if (mime.startsWith('image/')) {
+      content.innerHTML = `<img src="${url}" onclick="this.classList.toggle('zoomed')" title="Smelltu til að stækka/minnka">`;
+    } else {
+      content.innerHTML = `<div class="preview-fallback">Get ekki forskoðað þessa skráartegund.<br><a href="${url}" download="${displayName}">Sækja skrá</a></div>`;
+    }
+    document.getElementById('previewOverlay').classList.add('active');
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function closePreview() {
+    document.getElementById('previewOverlay').classList.remove('active');
+    document.getElementById('previewContent').innerHTML = '';
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closePreview();
+  });
 
   async function deleteAttachment(id, displayName) {
     if (!confirm(`Eyða viðhenginu „${displayName}"? Þetta er óafturkræft.`)) return;
