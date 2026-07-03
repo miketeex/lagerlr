@@ -58,6 +58,17 @@
   .notify.success { background: rgba(56,178,74,0.12); color: #2b8a3e; border: 1px solid rgba(56,178,74,0.3); display: block; }
   .notify.error { background: rgba(224,83,83,0.12); color: #c0392b; border: 1px solid rgba(224,83,83,0.3); display: block; }
 
+  .step-progress { display: flex; align-items: center; gap: 8px; margin-bottom: 24px; }
+  .step-dot {
+    width: 28px; height: 28px; border-radius: 50%; background: var(--card);
+    color: var(--text-muted); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; flex-shrink: 0; transition: all 0.2s ease;
+  }
+  .step-dot.current { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .step-dot.done { background: var(--text-primary); color: var(--surface); border-color: var(--text-primary); }
+  .step-line { flex: 1; height: 1px; background: var(--border); }
+
   .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 32px; }
   .card h2 { font-size: 18px; font-weight: 700; margin-bottom: 22px; }
 
@@ -86,24 +97,31 @@
   .autocomplete-item span { color: var(--text-muted); font-size: 11px; margin-left: 8px; }
   .autocomplete-item.eol { opacity: 0.55; font-style: italic; }
 
-  .store-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 8px; }
-  .store-btn {
-    padding: 14px 8px; border: 1px solid var(--border); border-radius: var(--radius-btn);
+  .choice-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 8px; }
+  .choice-grid.two-col { grid-template-columns: repeat(2, 1fr); }
+  .choice-btn {
+    padding: 16px 10px; border: 1px solid var(--border); border-radius: var(--radius-btn);
     background: var(--card); color: var(--text-primary); font-family: inherit; font-size: 13px; font-weight: 600;
     cursor: pointer; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px;
   }
-  .store-btn [data-lucide] { color: var(--primary); }
-  .store-btn.active, .store-btn:hover { border-color: var(--primary); background: rgba(120,162,47,0.06); }
+  .choice-btn [data-lucide] { color: var(--primary); width: 20px; height: 20px; }
+  .choice-btn.active, .choice-btn:hover { border-color: var(--primary); background: rgba(120,162,47,0.06); }
 
   .btn { background: var(--primary); color: #fff; border: none; padding: 12px 24px; border-radius: var(--radius-btn); font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; width: 100%; margin-top: 8px; }
   .btn:hover { background: var(--primary-hover); }
+  .btn-secondary { background: var(--card); color: var(--text-primary); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--primary); background: var(--card); }
+
+  .step-actions { display: flex; gap: 10px; margin-top: 8px; }
+  .step-actions .btn { margin-top: 0; }
 
   .form-section { display: none; }
   .form-section.active { display: block; }
 
-  .store-label { font-size: 13px; color: var(--text-secondary); margin-bottom: 18px; display: flex; align-items: center; gap: 6px; }
-  .store-label strong { color: var(--text-primary); }
-  .store-label a { color: var(--primary); font-size: 12px; margin-left: 6px; text-decoration: underline; }
+  .selection-summary { font-size: 13px; color: var(--text-secondary); margin-bottom: 18px; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
+  .selection-summary span { display: flex; align-items: center; gap: 4px; }
+  .selection-summary strong { color: var(--text-primary); }
+  .selection-summary a { color: var(--primary); font-size: 12px; text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -120,24 +138,54 @@
 
   <div id="notify" class="notify"></div>
 
-  <div id="storeSection">
+  <div class="step-progress">
+    <div class="step-dot current" id="dot1">1</div>
+    <div class="step-line"></div>
+    <div class="step-dot" id="dot2">2</div>
+    <div class="step-line"></div>
+    <div class="step-dot" id="dot3">3</div>
+  </div>
+
+  <div id="storeSection" class="form-section active">
     <div class="card">
-      <h2>Veldu verslun</h2>
-      <div class="store-grid">
-        <button class="store-btn" onclick="selectStore('ELKO Lindir', this)"><i data-lucide="store"></i>ELKO Lindir</button>
-        <button class="store-btn" onclick="selectStore('ELKO Smáralind', this)"><i data-lucide="store"></i>ELKO Smáralind</button>
-        <button class="store-btn" onclick="selectStore('ELKO Skeifan', this)"><i data-lucide="store"></i>ELKO Skeifan</button>
-        <button class="store-btn" onclick="selectStore('ELKO Grandi', this)"><i data-lucide="store"></i>ELKO Grandi</button>
-        <button class="store-btn" onclick="selectStore('ELKO Akureyri', this)"><i data-lucide="store"></i>ELKO Akureyri</button>
-        <button class="store-btn" onclick="selectStore('ELKO Flugstöð', this)"><i data-lucide="store"></i>ELKO Flugstöð</button>
+      <h2>1. Veldu verslun</h2>
+      <div class="choice-grid">
+        <button class="choice-btn" onclick="selectStore('ELKO Lindir', this)"><i data-lucide="store"></i>ELKO Lindir</button>
+        <button class="choice-btn" onclick="selectStore('ELKO Smáralind', this)"><i data-lucide="store"></i>ELKO Smáralind</button>
+        <button class="choice-btn" onclick="selectStore('ELKO Skeifan', this)"><i data-lucide="store"></i>ELKO Skeifan</button>
+        <button class="choice-btn" onclick="selectStore('ELKO Grandi', this)"><i data-lucide="store"></i>ELKO Grandi</button>
+        <button class="choice-btn" onclick="selectStore('ELKO Akureyri', this)"><i data-lucide="store"></i>ELKO Akureyri</button>
+        <button class="choice-btn" onclick="selectStore('ELKO Flugstöð', this)"><i data-lucide="store"></i>ELKO Flugstöð</button>
       </div>
+    </div>
+  </div>
+
+  <div id="reasonSection" class="form-section">
+    <div class="card">
+      <div class="selection-summary">
+        <span><i data-lucide="store" style="width:14px; height:14px; color:var(--primary);"></i>Verslun: <strong id="summaryStore1"></strong></span>
+        <a href="#" onclick="goStep(1); return false;">Breyta</a>
+      </div>
+      <h2>2. Veldu ástæðu</h2>
+      <div class="choice-grid two-col">
+        <button class="choice-btn" onclick="selectReason('Gallað', this)"><i data-lucide="alert-triangle"></i>Gallað</button>
+        <button class="choice-btn" onclick="selectReason('Ósöluhæft', this)"><i data-lucide="package-x"></i>Ósöluhæft</button>
+        <button class="choice-btn" onclick="selectReason('Þjófnaður', this)"><i data-lucide="shield-alert"></i>Þjófnaður</button>
+        <button class="choice-btn" onclick="selectReason('Lagerleiðrétting', this)"><i data-lucide="clipboard-check"></i>Lagerleiðrétting</button>
+      </div>
+      <button class="btn btn-secondary" onclick="goStep(1)">← Til baka</button>
     </div>
   </div>
 
   <div id="formSection" class="form-section">
     <div class="card">
-      <p class="store-label">Verslun: <strong id="selectedStoreLabel"></strong><a href="#" onclick="changeStore()">Breyta</a></p>
-      <h2>Tilkynna frávik</h2>
+      <div class="selection-summary">
+        <span><i data-lucide="store" style="width:14px; height:14px; color:var(--primary);"></i>Verslun: <strong id="summaryStore2"></strong></span>
+        <a href="#" onclick="goStep(1); return false;">Breyta</a>
+        <span><i data-lucide="tag" style="width:14px; height:14px; color:var(--primary);"></i>Ástæða: <strong id="summaryReason"></strong></span>
+        <a href="#" onclick="goStep(2); return false;">Breyta</a>
+      </div>
+      <h2>3. Upplýsingar um tilkynningu</h2>
 
       <div class="field">
         <label>Vörunúmer *</label>
@@ -146,17 +194,6 @@
           <div class="autocomplete-list" id="autocompleteList"></div>
         </div>
         <div class="vara-desc" id="varaDesc"></div>
-      </div>
-
-      <div class="field">
-        <label>Ástæða *</label>
-        <select id="astæda">
-          <option value="">-- Veldu ástæðu --</option>
-          <option value="Gallað">Gallað</option>
-          <option value="Ósöluhæft">Ósöluhæft</option>
-          <option value="Þjófnaður">Þjófnaður</option>
-          <option value="Lagerleiðrétting">Lagerleiðrétting</option>
-        </select>
       </div>
 
       <div class="field">
@@ -169,7 +206,10 @@
         <input type="text" id="tilkynnir" placeholder="Sölustafir">
       </div>
 
-      <button class="btn" onclick="submitReport()">Senda tilkynningu</button>
+      <div class="step-actions">
+        <button class="btn btn-secondary" onclick="goStep(2)">← Til baka</button>
+        <button class="btn" onclick="submitReport()">Senda tilkynningu</button>
+      </div>
     </div>
   </div>
 
@@ -186,6 +226,7 @@
   const FLOW_SUBMIT = PROXY + '/senda-tilkynningu';
 
   let selectedStore = '';
+  let selectedAstaeda = '';
   let selectedVara = '';
   let selectedVorunumer = '';
   let searchTimeout = null;
@@ -197,17 +238,26 @@
     setTimeout(() => el.className = 'notify', 4000);
   }
 
-  function selectStore(store, btn) {
-    selectedStore = store;
-    document.getElementById('selectedStoreLabel').textContent = store;
-    document.getElementById('storeSection').style.display = 'none';
-    document.getElementById('formSection').classList.add('active');
+  function goStep(n) {
+    document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+    document.getElementById(['storeSection', 'reasonSection', 'formSection'][n - 1]).classList.add('active');
+    for (let i = 1; i <= 3; i++) {
+      const dot = document.getElementById('dot' + i);
+      dot.className = 'step-dot' + (i === n ? ' current' : i < n ? ' done' : '');
+    }
   }
 
-  function changeStore() {
-    selectedStore = '';
-    document.getElementById('storeSection').style.display = 'block';
-    document.getElementById('formSection').classList.remove('active');
+  function selectStore(store, btn) {
+    selectedStore = store;
+    document.getElementById('summaryStore1').textContent = store;
+    document.getElementById('summaryStore2').textContent = store;
+    goStep(2);
+  }
+
+  function selectReason(reason, btn) {
+    selectedAstaeda = reason;
+    document.getElementById('summaryReason').textContent = reason;
+    goStep(3);
   }
 
   function searchProducts(query) {
@@ -296,12 +346,10 @@
   });
 
   async function submitReport() {
-    const astæda = document.getElementById('astæda').value;
     const lysing = document.getElementById('lysing').value.trim();
     const tilkynnir = document.getElementById('tilkynnir').value.trim();
 
     if (!selectedVorunumer) { notify('Veldu vöru úr listanum.', 'error'); return; }
-    if (!astæda) { notify('Veldu ástæðu.', 'error'); return; }
     if (!lysing) { notify('Skrifaðu nánari lýsingu.', 'error'); return; }
     if (!tilkynnir) { notify('Skráðu nafn tilkynnanda.', 'error'); return; }
 
@@ -313,7 +361,7 @@
           Verslun: selectedStore,
           Vorunumer: selectedVorunumer,
           Vara: selectedVara,
-          Astæda: astæda,
+          Astæda: selectedAstaeda,
           Lysing: lysing,
           Tilkynnir: tilkynnir
         })
@@ -322,11 +370,14 @@
       notify('Tilkynning send!', 'success');
       document.getElementById('vorunumer').value = '';
       document.getElementById('varaDesc').textContent = '';
-      document.getElementById('astæda').value = '';
       document.getElementById('lysing').value = '';
       document.getElementById('tilkynnir').value = '';
       selectedVorunumer = '';
       selectedVara = '';
+      selectedAstaeda = '';
+      selectedStore = '';
+      document.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('active'));
+      goStep(1);
     } catch(e) {
       notify('Villa við að senda tilkynningu. Reyndu aftur.', 'error');
       console.error(e);
