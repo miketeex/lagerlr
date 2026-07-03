@@ -698,8 +698,11 @@
   }
 
   function renderRedFlags(items) {
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
+    const recentItems = items.filter(i => (i.Dagsetning || '').split('T')[0] >= thirtyDaysAgo);
+
     const counts = {};
-    items.forEach(i => {
+    recentItems.forEach(i => {
       const v = i.V_x00f6_run_x00fa_mer || i.Vorunumer || '';
       if (v) counts[v] = (counts[v] || 0) + 1;
     });
@@ -716,7 +719,7 @@
     section.id = 'redFlagsSection';
     section.style.cssText = 'background:var(--card); border:1px solid var(--border); border-radius:var(--radius-card); padding:16px 20px; margin-bottom:16px; border-left:3px solid #E05353;';
     section.innerHTML = `
-      <div style="font-weight:700; color:var(--badge-danger-text); margin-bottom:10px; font-size:14px; display:flex; align-items:center; gap:6px;"><i data-lucide="alert-triangle" style="width:16px; height:16px;"></i>Endurteknar tilkynningar</div>
+      <div style="font-weight:700; color:var(--badge-danger-text); margin-bottom:10px; font-size:14px; display:flex; align-items:center; gap:6px;"><i data-lucide="alert-triangle" style="width:16px; height:16px;"></i>Endurteknar tilkynningar <span style="font-weight:400; color:var(--text-muted); font-size:12px;">(síðustu 30 daga)</span></div>
       <div style="display:flex; flex-wrap:wrap; gap:8px;">
         ${flagged.map(([v, c]) => `
           <span style="background:${c >= 3 ? 'var(--badge-danger-bg)' : 'var(--badge-warning-bg)'}; border:1px solid ${c >= 3 ? 'var(--badge-danger-text)' : 'var(--badge-warning-text)'}; border-radius:20px; padding:4px 12px; font-size:12px; font-weight:600; color:${c >= 3 ? 'var(--badge-danger-text)' : 'var(--badge-warning-text)'};">
@@ -753,7 +756,11 @@
       const dagur = r.Dagsetning?.split('T')[0] || '';
       const breytt = r.StadaDagsetning?.split('T')[0] || '';
       const vorunumer = r.V_x00f6_run_x00fa_mer || r.Vorunumer || '';
-      const count = window._allTilkynningar.filter(i => (i.V_x00f6_run_x00fa_mer || i.Vorunumer) === vorunumer).length;
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
+      const count = window._allTilkynningar.filter(i =>
+        (i.V_x00f6_run_x00fa_mer || i.Vorunumer) === vorunumer &&
+        (i.Dagsetning || '').split('T')[0] >= thirtyDaysAgo
+      ).length;
       const flag = count >= 3
         ? ` <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#E05353; margin-left:4px; vertical-align:middle;"></span>`
         : count >= 2
