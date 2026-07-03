@@ -342,6 +342,19 @@
     .comment-item .meta { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
     .comment-item .meta strong { color: var(--text-secondary); }
     .comment-item .text { font-size: 13px; color: var(--text-primary); white-space: pre-wrap; }
+    .comment-actions { display: flex; gap: 4px; }
+    .comment-actions button {
+      background: none; border: none; padding: 2px; cursor: pointer; color: var(--text-muted);
+      display: flex; align-items: center;
+    }
+    .comment-actions button:hover { color: var(--text-primary); }
+    .comment-edit-form { display: flex; flex-direction: column; gap: 6px; }
+    .comment-edit-form textarea {
+      padding: 8px 10px; border: 1px solid var(--elko-green); border-radius: 8px;
+      font-size: 13px; font-family: 'Inter', sans-serif; background: var(--surface); color: var(--text-primary);
+      resize: vertical; min-height: 44px;
+    }
+    .comment-edit-actions { display: flex; gap: 6px; justify-content: flex-end; }
     .comments-empty { font-size: 13px; color: var(--text-muted); padding: 12px 0; text-align: center; }
 
     .comment-form { display: flex; gap: 8px; align-items: flex-end; }
@@ -573,6 +586,8 @@
   const FLOW_BAETA_VID_VIDHENGI = PROXY + '/baeta-vid-vidhengi';
   const FLOW_EYDA_VIDHENGI = PROXY + '/eyda-vidhengi';
   const FLOW_VIDHENGI_INNIHALD = PROXY + '/vidhengi-innihald';
+  const FLOW_UPPFAERA_ATHUGASEMD = PROXY + '/uppfaera-athugasemd';
+  const FLOW_EYDA_ATHUGASEMD = PROXY + '/eyda-athugasemd';
 
   let currentUser = null;
   let pendingEmail = null;
@@ -889,14 +904,95 @@
         return;
       }
 
-      list.innerHTML = items.map(c => `
-        <div class="comment-item">
-          <div class="meta"><strong>${c.Hofundur || 'Óþekkt'}</strong><span>${formatCommentDate(c.Dagsetning || c.Created)}</span></div>
-          <div class="text">${(c.Texti || '').replace(/</g, '&lt;')}</div>
-        </div>`).join('');
+      const role = currentUser?.Hlutverk?.Value || currentUser?.Hlutverk || '';
+      const myEmail = currentUser?.Title || '';
+
+      list.innerHTML = items.map(c => {
+        const canEdit = role === 'Master' || c.Hofundur === myEmail;
+        const safeText = (c.Texti || '').replace(/</g, '&lt;');
+        return `
+        <div class="comment-item" id="comment-${c.ID}">
+          <div class="meta">
+            <strong>${c.Hofundur || 'Óþekkt'}</strong>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span>${formatCommentDate(c.Dagsetning || c.Created)}</span>
+              ${canEdit ? `
+              <div class="comment-actions">
+                <button title="Breyta" onclick="startEditComment(${c.ID})"><i data-lucide="pencil" style="width:12px; height:12px;"></i></button>
+                <button title="Eyða" onclick="deleteComment(${c.ID})"><i data-lucide="trash-2" style="width:12px; height:12px;"></i></button>
+              </div>` : ''}
+            </div>
+          </div>
+          <div class="text" id="commentText-${c.ID}">${safeText}</div>
+        </div>`;
+      }).join('');
       list.scrollTop = list.scrollHeight;
+      if (window.lucide) lucide.createIcons();
     } catch(e) {
       list.innerHTML = '<p class="comments-empty">Villa við að sækja athugasemdir.</p>';
+      console.error(e);
+    }
+  }
+
+  function startEditComment(id) {
+    const all = athugasemdirRawCache || [];
+    const c = all.find(x => Number(x.ID) === Number(id));
+    if (!c) return;
+    const textEl = document.getElementById('commentText-' + id);
+    if (!textEl) return;
+    const original = c.Texti || '';
+    textEl.outerHTML = `
+      <div class="comment-edit-form" id="commentText-${id}">
+        <textarea id="editCommentInput-${id}">${original}</textarea>
+        <div class="comment-edit-actions">
+          <button class="elko-btn elko-btn-secondary elko-btn-sm" onclick="cancelEditComment(${id})">Hætta við</button>
+          <button class="elko-btn elko-btn-sm" onclick="saveCommentEdit(${id})">Vista</button>
+        </div>
+      </div>`;
+  }
+
+  function cancelEditComment(id) {
+    const all = athugasemdirRawCache || [];
+    const c = all.find(x => Number(x.ID) === Number(id));
+    const original = c ? (c.Texti || '') : '';
+    const el = document.getElementById('commentText-' + id);
+    if (!el) return;
+    el.outerHTML = `<div class="text" id="commentText-${id}">${original.replace(/</g, '&lt;')}</div>`;
+  }
+
+  async function saveCommentEdit(id) {
+    const input = document.getElementById('editCommentInput-' + id);
+    if (!input) return;
+    const newText = input.value.trim();
+    if (!newText) return;
+    try {
+      await fetch(FLOW_UPPFAERA_ATHUGASEMD, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ID: id, Texti: newText })
+      });
+      await fetchAthugasemdirRaw(true);
+      loadComments();
+      renderTilkynningar(window._tilkynningarBaseItems || []);
+    } catch(e) {
+      notify('dashNotify', 'Villa við að vista breytingu.', 'error');
+      console.error(e);
+    }
+  }
+
+  async function deleteComment(id) {
+    if (!confirm('Eyða þessari athugasemd? Þetta er óafturkræft.')) return;
+    try {
+      await fetch(FLOW_EYDA_ATHUGASEMD, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ID: id })
+      });
+      await fetchAthugasemdirRaw(true);
+      loadComments();
+      renderTilkynningar(window._tilkynningarBaseItems || []);
+    } catch(e) {
+      notify('dashNotify', 'Villa við að eyða athugasemd.', 'error');
       console.error(e);
     }
   }
