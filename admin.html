@@ -725,6 +725,7 @@
         <div class="attachment-item">
           <i data-lucide="paperclip"></i>
           <a href="#" onclick="openAttachment('${a.Id.replace(/'/g, "\\'")}', '${a.DisplayName.replace(/'/g, "\\'")}'); return false;">${a.DisplayName}</a>
+          <button class="icon-action-btn" onclick="downloadAttachment('${a.Id.replace(/'/g, "\\'")}', '${a.DisplayName.replace(/'/g, "\\'")}')"><i data-lucide="download" style="width:14px; height:14px;"></i></button>
           ${canDelete ? `<button class="icon-action-btn icon-action-danger" onclick="deleteAttachment('${a.Id.replace(/'/g, "\\'")}', '${a.DisplayName.replace(/'/g, "\\'")}')"><i data-lucide="trash-2" style="width:14px; height:14px;"></i></button>` : ''}
         </div>`).join('');
       if (window.lucide) lucide.createIcons();
@@ -821,6 +822,31 @@
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closePreview();
   });
+
+  async function downloadAttachment(id, displayName) {
+    try {
+      const res = await fetch(FLOW_VIDHENGI_INNIHALD, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ TilkynningID: currentCommentsTilkynningId, FileName: id })
+      });
+      const data = await res.json();
+      const base64 = data.FileContent;
+      if (!base64) { notify('dashNotify', 'Ekki tókst að sækja viðhengi.', 'error'); return; }
+      const blob = base64ToBlob(base64, guessMimeType(displayName || id));
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = displayName || 'vidhengi';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+    } catch(e) {
+      notify('dashNotify', 'Villa við að sækja viðhengi.', 'error');
+      console.error(e);
+    }
+  }
 
   async function deleteAttachment(id, displayName) {
     if (!confirm(`Eyða viðhenginu „${displayName}"? Þetta er óafturkræft.`)) return;
