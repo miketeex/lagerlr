@@ -13,7 +13,7 @@
          HTML below. Redefining them here re-themes the whole page. */
       --elko-green: #78A22F;
       --elko-dark: #163019;
-      
+
       --primary: #78A22F;
       --primary-hover: #689326;
 
@@ -613,7 +613,7 @@
     document.querySelectorAll('.elko-panel').forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('panel-' + tab).classList.add('active');
-    if (tab === 'tilkynningar') loadTilkynningar();
+    if (tab === 'tilkynningar') loadTilkynningar(true, true);
     if (tab === 'stats') loadStats();
     if (tab === 'notendur') loadNotendur();
   }
@@ -697,7 +697,7 @@
               <option>Þjófnaður</option>
               <option>Lagerleiðrétting</option>
             </select>
-            <button class="elko-btn elko-btn-secondary elko-btn-sm" onclick="loadTilkynningar()"><i data-lucide="refresh-cw" style="width:14px; height:14px;"></i> Uppfæra</button>
+            <button class="elko-btn elko-btn-secondary elko-btn-sm" onclick="loadTilkynningar(true, true)"><i data-lucide="refresh-cw" style="width:14px; height:14px;"></i> Uppfæra</button>
           </div>
           <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
             <div style="background:var(--badge-info-bg); border-radius:var(--radius-btn); padding:8px 16px; font-size:13px; font-weight:600; color:var(--badge-info-text); display:flex; align-items:center; gap:8px;"><span style="width:8px; height:8px; border-radius:50%; background:#2D9CDB; display:inline-block;"></span><span id="countNy">Ný: ${nyCount}</span></div>
@@ -929,7 +929,10 @@
   async function loadStats() {
     if (!currentUser) return;
     const panel = document.getElementById('panel-stats');
-    panel.innerHTML = '<p style="padding:20px;">Hleður tölfræði...</p>';
+    const hasContent = panel.querySelector('.stats-grid');
+    if (!hasContent) {
+      panel.innerHTML = '<p style="padding:20px;">Hleður tölfræði...</p>';
+    }
 
     try {
       const res = await fetch(FLOW_TILKYNNINGAR, {
@@ -1053,7 +1056,10 @@
 
   async function loadNotendur() {
     const panel = document.getElementById('panel-notendur');
-    panel.innerHTML = '<p style="padding:20px;">Hleður notendur...</p>';
+    const hasContent = panel.querySelector('.elko-table-wrap');
+    if (!hasContent) {
+      panel.innerHTML = '<p style="padding:20px;">Hleður notendur...</p>';
+    }
 
     try {
       const res = await fetch(FLOW_NOTENDUR, {
