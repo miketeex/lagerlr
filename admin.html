@@ -406,6 +406,8 @@
 
   let currentUser = null;
   let pendingEmail = null;
+  let tilkynningarPage = 1;
+  const TILKYNNINGAR_PAGE_SIZE = 20;
 
   async function hashPassword(password) {
     const encoder = new TextEncoder();
@@ -653,9 +655,11 @@
             </thead>
             <tbody id="tilkynningarBody"></tbody>
           </table>
-        </div>`;
+        </div>
+        <div id="tilkynningarPagination" style="display:flex; align-items:center; justify-content:space-between; margin-top:14px; font-size:13px; color:var(--text-secondary);"></div>`;
 
       window._allTilkynningar = items;
+      tilkynningarPage = 1;
       renderRedFlags(items);
       renderTilkynningar(items);
       if (window.lucide) lucide.createIcons();
@@ -675,6 +679,7 @@
     if (verslun) items = items.filter(i => i.Verslun === verslun);
     if (stada) items = items.filter(i => i.Sta_x00f0_a?.Value === stada || i.Sta_x00f0_a === stada);
     if (astæda) items = items.filter(i => i.OData__x00c1_st_x00e6__x00f0_a?.Value === astæda || i.Astæda === astæda);
+    tilkynningarPage = 1;
     renderRedFlags(items);
     renderTilkynningar(items);
   }
@@ -716,12 +721,20 @@
     const tbody = document.getElementById('tilkynningarBody');
     const role = currentUser?.Hlutverk?.Value || currentUser?.Hlutverk || '';
 
+    window._currentTilkynningarItems = items;
+
     if (!items.length) {
       tbody.innerHTML = '<tr><td colspan="11">Engar tilkynningar fundust.</td></tr>';
+      renderTilkynningarPagination(0);
       return;
     }
 
-    tbody.innerHTML = items.map(r => {
+    const totalPages = Math.max(1, Math.ceil(items.length / TILKYNNINGAR_PAGE_SIZE));
+    if (tilkynningarPage > totalPages) tilkynningarPage = totalPages;
+    const start = (tilkynningarPage - 1) * TILKYNNINGAR_PAGE_SIZE;
+    const pageItems = items.slice(start, start + TILKYNNINGAR_PAGE_SIZE);
+
+    tbody.innerHTML = pageItems.map(r => {
       const stada = r.Sta_x00f0_a?.Value || r.Sta_x00f0_a || '';
       const astæda = r.OData__x00c1_st_x00e6__x00f0_a?.Value || r.Astæda || '';
       const dagur = r.Dagsetning?.split('T')[0] || '';
@@ -755,6 +768,38 @@
         </td>` : ''}
       </tr>`;
     }).join('');
+
+    renderTilkynningarPagination(items.length);
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function renderTilkynningarPagination(totalItems) {
+    const el = document.getElementById('tilkynningarPagination');
+    if (!el) return;
+
+    if (!totalItems) { el.innerHTML = ''; return; }
+
+    const totalPages = Math.max(1, Math.ceil(totalItems / TILKYNNINGAR_PAGE_SIZE));
+    const start = (tilkynningarPage - 1) * TILKYNNINGAR_PAGE_SIZE + 1;
+    const end = Math.min(tilkynningarPage * TILKYNNINGAR_PAGE_SIZE, totalItems);
+
+    el.innerHTML = `
+      <span>Sýni ${start}–${end} af ${totalItems}</span>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <button class="elko-btn elko-btn-secondary elko-btn-sm" ${tilkynningarPage <= 1 ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''} onclick="goToTilkynningarPage(${tilkynningarPage - 1})">
+          <i data-lucide="chevron-left" style="width:14px; height:14px;"></i> Fyrri
+        </button>
+        <span style="padding:0 6px; font-weight:600; color:var(--text-primary);">Síða ${tilkynningarPage} af ${totalPages}</span>
+        <button class="elko-btn elko-btn-secondary elko-btn-sm" ${tilkynningarPage >= totalPages ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''} onclick="goToTilkynningarPage(${tilkynningarPage + 1})">
+          Næsta <i data-lucide="chevron-right" style="width:14px; height:14px;"></i>
+        </button>
+      </div>`;
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function goToTilkynningarPage(n) {
+    tilkynningarPage = n;
+    renderTilkynningar(window._currentTilkynningarItems || []);
   }
 
   async function updateStada(id, stada) {
