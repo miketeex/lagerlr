@@ -13,7 +13,7 @@
          HTML below. Redefining them here re-themes the whole page. */
       --elko-green: #78A22F;
       --elko-dark: #163019;
-      
+
       --primary: #78A22F;
       --primary-hover: #689326;
 
@@ -321,6 +321,40 @@
 
     .subsection-label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin: 14px 0 8px; text-transform: uppercase; letter-spacing: 0.02em; }
     .subsection-label:first-of-type { margin-top: 4px; }
+    .clickable-row { cursor: pointer; }
+
+    .overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      z-index: 2000; align-items: center; justify-content: center; padding: 20px;
+    }
+    .overlay.active { display: flex; }
+
+    .modal {
+      background: var(--surface); border-radius: var(--radius-card);
+      padding: 26px; max-width: 520px; width: 100%; max-height: 80vh;
+      display: flex; flex-direction: column;
+    }
+    .modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .modal .modal-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
+
+    .comments-list { overflow-y: auto; flex: 1; margin-bottom: 16px; display: flex; flex-direction: column; gap: 10px; max-height: 300px; }
+    .comment-item { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
+    .comment-item .meta { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+    .comment-item .meta strong { color: var(--text-secondary); }
+    .comment-item .text { font-size: 13px; color: var(--text-primary); white-space: pre-wrap; }
+    .comments-empty { font-size: 13px; color: var(--text-muted); padding: 12px 0; text-align: center; }
+
+    .comment-form { display: flex; gap: 8px; align-items: flex-end; }
+    .comment-form textarea {
+      flex: 1; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-btn);
+      font-size: 13px; font-family: 'Inter', sans-serif; background: var(--card); color: var(--text-primary);
+      resize: vertical; min-height: 44px; max-height: 120px;
+    }
+    .comment-form textarea:focus { border-color: var(--elko-green); outline: none; }
+
+    .modal-close { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; }
+    .modal-close:hover { color: var(--text-primary); }
+    .modal-header { display: flex; align-items: flex-start; justify-content: space-between; }
   </style>
 </head>
 <body>
@@ -425,6 +459,23 @@
   </div>
 </div>
 
+<div class="overlay" id="commentsOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <h3 id="commentsTitle">Athugasemdir</h3>
+        <div class="modal-sub" id="commentsSub"></div>
+      </div>
+      <button class="modal-close" onclick="closeComments()"><i data-lucide="x" style="width:18px; height:18px;"></i></button>
+    </div>
+    <div class="comments-list" id="commentsList"></div>
+    <div class="comment-form">
+      <textarea id="newCommentText" placeholder="Skrifaðu athugasemd..."></textarea>
+      <button class="elko-btn elko-btn-sm" onclick="submitComment()"><i data-lucide="send" style="width:14px; height:14px;"></i></button>
+    </div>
+  </div>
+</div>
+
 <script>
   if (new URLSearchParams(window.location.search).get('embedded') === 'true') {
     document.body.classList.add('embedded');
@@ -443,6 +494,8 @@
   const FLOW_UPPFAERA_NOTANDA = PROXY + '/uppfaera-notanda';
   const FLOW_ENDURSTILLA_NOTANDA = PROXY + '/endurstilla-notanda';
   const FLOW_EYDA_NOTANDA = PROXY + '/eyda-notanda';
+  const FLOW_ATHUGASEMDIR = PROXY + '/athugasemdir';
+  const FLOW_SENDA_ATHUGASEMD = PROXY + '/senda-athugasemd';
 
   let currentUser = null;
   let pendingEmail = null;
@@ -479,6 +532,89 @@
     tilkynningarRawCache = items;
     tilkynningarRawCacheTime = now;
     return items;
+  }
+
+  let currentCommentsTilkynningId = null;
+  let currentCommentsTilvisun = '';
+
+  function openCommentsById(id) {
+    const source = window._currentTilkynningarItems || window._allTilkynningar || [];
+    const item = source.find(i => i.ID === id);
+    if (!item) return;
+    const vorunumer = item.V_x00f6_run_x00fa_mer || item.Vorunumer || '';
+    openComments(item.ID, item.Title || '', vorunumer);
+  }
+
+  function openComments(id, tilvisun, vorunumer) {
+    currentCommentsTilkynningId = id;
+    currentCommentsTilvisun = tilvisun;
+    document.getElementById('commentsSub').textContent = `${tilvisun} — ${vorunumer || ''}`;
+    document.getElementById('commentsList').innerHTML = '<p class="comments-empty">Hleður...</p>';
+    document.getElementById('newCommentText').value = '';
+    document.getElementById('commentsOverlay').classList.add('active');
+    if (window.lucide) lucide.createIcons();
+    loadComments();
+  }
+
+  function closeComments() {
+    document.getElementById('commentsOverlay').classList.remove('active');
+    currentCommentsTilkynningId = null;
+  }
+
+  function formatCommentDate(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return d.toLocaleDateString('is-IS') + ' ' + d.toLocaleTimeString('is-IS', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  async function loadComments() {
+    const list = document.getElementById('commentsList');
+    try {
+      const res = await fetch(FLOW_ATHUGASEMDIR, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ TilkynningID: currentCommentsTilkynningId })
+      });
+      const data = await res.json();
+      const items = data.value || data || [];
+
+      if (!items.length) {
+        list.innerHTML = '<p class="comments-empty">Engar athugasemdir ennþá.</p>';
+        return;
+      }
+
+      list.innerHTML = items.map(c => `
+        <div class="comment-item">
+          <div class="meta"><strong>${c.Hofundur || 'Óþekkt'}</strong><span>${formatCommentDate(c.Dagsetning || c.Created)}</span></div>
+          <div class="text">${(c.Texti || '').replace(/</g, '&lt;')}</div>
+        </div>`).join('');
+      list.scrollTop = list.scrollHeight;
+    } catch(e) {
+      list.innerHTML = '<p class="comments-empty">Villa við að sækja athugasemdir.</p>';
+      console.error(e);
+    }
+  }
+
+  async function submitComment() {
+    const textEl = document.getElementById('newCommentText');
+    const texti = textEl.value.trim();
+    if (!texti) return;
+    if (!currentCommentsTilkynningId) return;
+
+    const hofundur = currentUser?.Title || 'Óþekkt';
+
+    try {
+      await fetch(FLOW_SENDA_ATHUGASEMD, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ TilkynningID: currentCommentsTilkynningId, Texti: texti, Hofundur: hofundur })
+      });
+      textEl.value = '';
+      loadComments();
+    } catch(e) {
+      notify('dashNotify', 'Villa við að senda athugasemd.', 'error');
+      console.error(e);
+    }
   }
 
   function getTkField(r, key) {
@@ -917,7 +1053,7 @@
         ? ` <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#F4B740; margin-left:4px; vertical-align:middle;"></span>`
         : '';
       return `<tr>
-        <td>${r.Title || ''}</td>
+        <td><a href="#" onclick="openCommentsById(${r.ID}); return false;" style="color:var(--elko-green); font-weight:600; text-decoration:none;">${r.Title || ''}</a></td>
         <td>${r.Verslun || ''}</td>
         <td>${vorunumer}${flag}</td>
         <td>${r.Vara || ''}</td>
