@@ -313,7 +313,7 @@
     list.innerHTML = items.map((item, idx) => {
       const isEol = (item.Vara || '').includes('#');
       return `<div class="autocomplete-item${isEol ? ' eol' : ''}" data-idx="${idx}">
-        ${item.Title} <span>${item.Vara || ''}${isEol ? ' ⚠️' : ''}</span>
+        ${item.Title} <span>${item.Vara || ''}${isEol ? ' <i data-lucide="triangle-alert" style="width:12px; height:12px; color:#F4B740; vertical-align:-2px;"></i>' : ''}</span>
       </div>`;
     }).join('');
 
@@ -329,6 +329,7 @@
     });
 
     list.classList.add('active');
+    if (window.lucide) lucide.createIcons();
   }
 
   function selectProduct(vorunumer, vara) {
