@@ -13,7 +13,7 @@
          HTML below. Redefining them here re-themes the whole page. */
       --elko-green: #78A22F;
       --elko-dark: #163019;
-      
+
       --primary: #78A22F;
       --primary-hover: #689326;
 
@@ -908,14 +908,25 @@
       const myEmail = currentUser?.Title || '';
 
       list.innerHTML = items.map(c => {
-        const canEdit = role === 'Master' || c.Hofundur === myEmail;
+        const isDeleted = c.Eytt === true || c.Eytt === 'Yes' || c.Eytt === 1;
+        const canEdit = !isDeleted && (role === 'Master' || c.Hofundur === myEmail);
+        const wasEdited = !isDeleted && c.SidastBreyttAf;
+
+        if (isDeleted) {
+          return `
+          <div class="comment-item" id="comment-${c.ID}" style="opacity:0.6;">
+            <div class="meta"><strong>${c.Hofundur || 'Óþekkt'}</strong><span>${formatCommentDate(c.Dagsetning || c.Created)}</span></div>
+            <div class="text" style="font-style:italic; color:var(--text-muted);">Athugasemd eytt af ${c.EyttAf || 'Óþekkt'} — ${formatCommentDate(c.EyttDags)}</div>
+          </div>`;
+        }
+
         const safeText = (c.Texti || '').replace(/</g, '&lt;');
         return `
         <div class="comment-item" id="comment-${c.ID}">
           <div class="meta">
             <strong>${c.Hofundur || 'Óþekkt'}</strong>
             <div style="display:flex; align-items:center; gap:8px;">
-              <span>${formatCommentDate(c.Dagsetning || c.Created)}</span>
+              <span title="${wasEdited ? 'Breytt af ' + c.SidastBreyttAf + ' — ' + formatCommentDate(c.SidastBreytt) : ''}">${formatCommentDate(c.Dagsetning || c.Created)}${wasEdited ? ' (breytt)' : ''}</span>
               ${canEdit ? `
               <div class="comment-actions">
                 <button title="Breyta" onclick="startEditComment(${c.ID})"><i data-lucide="pencil" style="width:12px; height:12px;"></i></button>
@@ -969,7 +980,7 @@
       await fetch(FLOW_UPPFAERA_ATHUGASEMD, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ID: id, Texti: newText })
+        body: JSON.stringify({ ID: id, Texti: newText, BreyttAf: currentUser?.Title || '' })
       });
       await fetchAthugasemdirRaw(true);
       loadComments();
@@ -981,12 +992,12 @@
   }
 
   async function deleteComment(id) {
-    if (!confirm('Eyða þessari athugasemd? Þetta er óafturkræft.')) return;
+    if (!confirm('Eyða þessari athugasemd? Hún verður merkt eydd og felld úr sýn, en ummerki haldast í sögunni.')) return;
     try {
       await fetch(FLOW_EYDA_ATHUGASEMD, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ID: id })
+        body: JSON.stringify({ ID: id, EyttAf: currentUser?.Title || '' })
       });
       await fetchAthugasemdirRaw(true);
       loadComments();
@@ -1457,7 +1468,7 @@
         : count >= 2
         ? ` <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#F4B740; margin-left:4px; vertical-align:middle;"></span>`
         : '';
-      const commentCount = athugasemdirRawCache.filter(c => Number(c.TilkynningID) === Number(r.ID)).length;
+      const commentCount = athugasemdirRawCache.filter(c => Number(c.TilkynningID) === Number(r.ID) && !(c.Eytt === true || c.Eytt === 'Yes' || c.Eytt === 1)).length;
       const commentBadge = commentCount > 0
         ? ` <span style="display:inline-flex; align-items:center; gap:2px; font-size:11px; color:var(--text-muted); margin-left:6px;"><i data-lucide="message-circle" style="width:12px; height:12px;"></i>${commentCount}</span>`
         : '';
