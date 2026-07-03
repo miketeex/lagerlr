@@ -13,7 +13,7 @@
          HTML below. Redefining them here re-themes the whole page. */
       --elko-green: #78A22F;
       --elko-dark: #163019;
-      
+
       --primary: #78A22F;
       --primary-hover: #689326;
 
@@ -534,6 +534,26 @@
     return items;
   }
 
+  let athugasemdirRawCache = [];
+  let athugasemdirRawCacheTime = 0;
+
+  async function fetchAthugasemdirRaw(forceRefresh = false) {
+    const now = Date.now();
+    if (!forceRefresh && athugasemdirRawCacheTime && (now - athugasemdirRawCacheTime) < TILKYNNINGAR_CACHE_TTL_MS) {
+      return athugasemdirRawCache;
+    }
+    const res = await fetch(FLOW_ATHUGASEMDIR, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    const data = await res.json();
+    const items = data.value || data || [];
+    athugasemdirRawCache = items;
+    athugasemdirRawCacheTime = now;
+    return items;
+  }
+
   let currentCommentsTilkynningId = null;
   let currentCommentsTilvisun = '';
 
@@ -570,13 +590,8 @@
   async function loadComments() {
     const list = document.getElementById('commentsList');
     try {
-      const res = await fetch(FLOW_ATHUGASEMDIR, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ TilkynningID: currentCommentsTilkynningId })
-      });
-      const data = await res.json();
-      const items = data.value || data || [];
+      const all = await fetchAthugasemdirRaw(false);
+      const items = all.filter(c => c.TilkynningID === currentCommentsTilkynningId);
 
       if (!items.length) {
         list.innerHTML = '<p class="comments-empty">Engar athugasemdir ennþá.</p>';
@@ -610,7 +625,9 @@
         body: JSON.stringify({ TilkynningID: currentCommentsTilkynningId, Texti: texti, Hofundur: hofundur })
       });
       textEl.value = '';
+      await fetchAthugasemdirRaw(true);
       loadComments();
+      renderTilkynningar(window._tilkynningarBaseItems || []);
     } catch(e) {
       notify('dashNotify', 'Villa við að senda athugasemd.', 'error');
       console.error(e);
@@ -832,6 +849,7 @@
 
     try {
       let items = await fetchTilkynningarRaw(forceRefresh);
+      await fetchAthugasemdirRaw(forceRefresh);
 
       const role = currentUser?.Hlutverk?.Value || currentUser?.Hlutverk || '';
       const verslun = currentUser?.Verslun || '';
@@ -1052,8 +1070,12 @@
         : count >= 2
         ? ` <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#F4B740; margin-left:4px; vertical-align:middle;"></span>`
         : '';
+      const commentCount = athugasemdirRawCache.filter(c => c.TilkynningID === r.ID).length;
+      const commentBadge = commentCount > 0
+        ? ` <span style="display:inline-flex; align-items:center; gap:2px; font-size:11px; color:var(--text-muted); margin-left:6px;"><i data-lucide="message-circle" style="width:12px; height:12px;"></i>${commentCount}</span>`
+        : '';
       return `<tr>
-        <td><a href="#" onclick="openCommentsById(${r.ID}); return false;" style="color:var(--elko-green); font-weight:600; text-decoration:none;">${r.Title || ''}</a></td>
+        <td><a href="#" onclick="openCommentsById(${r.ID}); return false;" style="color:var(--elko-green); font-weight:600; text-decoration:none;">${r.Title || ''}</a>${commentBadge}</td>
         <td>${r.Verslun || ''}</td>
         <td>${vorunumer}${flag}</td>
         <td>${r.Vara || ''}</td>
