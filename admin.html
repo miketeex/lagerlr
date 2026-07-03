@@ -570,7 +570,7 @@
     return [vidbotar];
   }
 
-  async function loadTilkynningar() {
+  async function loadTilkynningar(resetPage = true) {
     if (!currentUser) return;
     const panel = document.getElementById('panel-tilkynningar');
     panel.innerHTML = '<p style="padding:20px;">Hleður tilkynningar...</p>';
@@ -659,7 +659,7 @@
         <div id="tilkynningarPagination" style="display:flex; align-items:center; justify-content:space-between; margin-top:14px; font-size:13px; color:var(--text-secondary);"></div>`;
 
       window._allTilkynningar = items;
-      tilkynningarPage = 1;
+      if (resetPage) tilkynningarPage = 1;
       renderRedFlags(items);
       renderTilkynningar(items);
       if (window.lucide) lucide.createIcons();
@@ -811,7 +811,7 @@
         body: JSON.stringify({ ID: id, Stada: stada })
       });
       notify('dashNotify', 'Staða uppfærð!', 'success');
-      loadTilkynningar();
+      loadTilkynningar(false);
     } catch(e) {
       notify('dashNotify', 'Villa við að uppfæra stöðu.', 'error');
       console.error(e);
