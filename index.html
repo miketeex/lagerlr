@@ -12,7 +12,7 @@
     --primary: #78A22F;
     --primary-hover: #689326;
     --primary-light: #A6CF54;
-    
+
     --bg: #F6F8FA;
     --surface: #FFFFFF;
     --card: #FFFFFF;
@@ -235,7 +235,7 @@
         <input type="text" id="tilkynnir" placeholder="Sölustafir">
       </div>
 
-      <div class="field">
+      <div class="field" id="vidhengiField">
         <label>Viðhengi (valfrjálst)</label>
         <div class="dropzone" id="dropzone" onclick="document.getElementById('vidhengi').click()">
           <input type="file" id="vidhengi" accept="image/jpeg,image/png,application/pdf" multiple style="display:none;" onchange="handleFilesChange(this.files)">
@@ -295,9 +295,21 @@
     goStep(2);
   }
 
+  const ASTAEDUR_MED_VIDHENGI = ['Gallað', 'Þjófnaður', 'Ósöluhæft'];
+
   function selectReason(reason, btn) {
     selectedAstaeda = reason;
     document.getElementById('summaryReason').textContent = reason;
+
+    const allowAttachment = ASTAEDUR_MED_VIDHENGI.includes(reason);
+    const vidhengiField = document.getElementById('vidhengiField');
+    vidhengiField.style.display = allowAttachment ? 'block' : 'none';
+    if (!allowAttachment) {
+      selectedFiles = [];
+      document.getElementById('vidhengi').value = '';
+      renderFileList();
+    }
+
     goStep(3);
   }
 
