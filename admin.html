@@ -642,6 +642,38 @@
     if (tab === 'attachments') loadAttachments();
   }
 
+  let attachmentCountCache = {};
+
+  async function loadAttachmentCountsForPage(items) {
+    const toFetch = items.filter(r => !(r.ID in attachmentCountCache));
+    await Promise.all(toFetch.map(async r => {
+      try {
+        const res = await fetch(FLOW_VIDHENGI, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ TilkynningID: r.ID })
+        });
+        const data = await res.json();
+        const list = data.value || data || [];
+        attachmentCountCache[r.ID] = list.length;
+      } catch(e) {
+        attachmentCountCache[r.ID] = 0;
+      }
+    }));
+
+    let iconsNeeded = false;
+    items.forEach(r => {
+      const el = document.getElementById('attCount-' + r.ID);
+      if (!el) return;
+      const count = attachmentCountCache[r.ID] || 0;
+      if (count > 0) {
+        el.innerHTML = ` <span style="display:inline-flex; align-items:center; gap:2px; font-size:11px; color:var(--text-muted); margin-left:6px;"><i data-lucide="paperclip" style="width:12px; height:12px;"></i>${count}</span>`;
+        iconsNeeded = true;
+      }
+    });
+    if (iconsNeeded && window.lucide) lucide.createIcons();
+  }
+
   async function loadAttachments() {
     const list = document.getElementById('attachmentsList');
     list.innerHTML = '<p class="attachments-empty">Hleður...</p>';
@@ -691,6 +723,8 @@
       }
     }
     loadAttachments();
+    delete attachmentCountCache[currentCommentsTilkynningId];
+    loadAttachmentCountsForPage([{ ID: currentCommentsTilkynningId }]);
   }
 
   function fileToBase64(file) {
@@ -748,6 +782,8 @@
       });
       notify('dashNotify', 'Viðhengi eytt.', 'success');
       loadAttachments();
+      delete attachmentCountCache[currentCommentsTilkynningId];
+      loadAttachmentCountsForPage([{ ID: currentCommentsTilkynningId }]);
     } catch(e) {
       notify('dashNotify', 'Villa við að eyða viðhengi.', 'error');
       console.error(e);
@@ -1254,7 +1290,7 @@
         ? ` <span style="display:inline-flex; align-items:center; gap:2px; font-size:11px; color:var(--text-muted); margin-left:6px;"><i data-lucide="message-circle" style="width:12px; height:12px;"></i>${commentCount}</span>`
         : '';
       return `<tr>
-        <td style="white-space:nowrap;"><a href="#" onclick="openCommentsById(${r.ID}); return false;" style="color:var(--elko-green); font-weight:600; text-decoration:none;">${r.Title || ''}</a>${commentBadge}</td>
+        <td style="white-space:nowrap;"><a href="#" onclick="openCommentsById(${r.ID}); return false;" style="color:var(--elko-green); font-weight:600; text-decoration:none;">${r.Title || ''}</a>${commentBadge}<span id="attCount-${r.ID}"></span></td>
         <td>${r.Verslun || ''}</td>
         <td>${vorunumer}${flag}</td>
         <td>${r.Vara || ''}</td>
@@ -1277,6 +1313,7 @@
     }).join('');
 
     renderTilkynningarPagination(items.length);
+    loadAttachmentCountsForPage(pageItems);
     updateSortArrows();
     if (window.lucide) lucide.createIcons();
   }
