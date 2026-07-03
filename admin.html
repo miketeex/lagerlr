@@ -664,8 +664,8 @@
       list.innerHTML = items.map(a => `
         <div class="attachment-item">
           <i data-lucide="paperclip"></i>
-          <a href="#" onclick="openAttachment('${a.DisplayName.replace(/'/g, "\\'")}'); return false;">${a.DisplayName}</a>
-          ${canDelete ? `<button class="icon-action-btn icon-action-danger" onclick="deleteAttachment('${a.DisplayName.replace(/'/g, "\\'")}')"><i data-lucide="trash-2" style="width:14px; height:14px;"></i></button>` : ''}
+          <a href="#" onclick="openAttachment('${a.Id.replace(/'/g, "\\'")}'); return false;">${a.DisplayName}</a>
+          ${canDelete ? `<button class="icon-action-btn icon-action-danger" onclick="deleteAttachment('${a.Id.replace(/'/g, "\\'")}', '${a.DisplayName.replace(/'/g, "\\'")}')"><i data-lucide="trash-2" style="width:14px; height:14px;"></i></button>` : ''}
         </div>`).join('');
       if (window.lucide) lucide.createIcons();
     } catch(e) {
@@ -738,13 +738,13 @@
     }
   }
 
-  async function deleteAttachment(fileName) {
-    if (!confirm(`Eyða viðhenginu „${fileName}"? Þetta er óafturkræft.`)) return;
+  async function deleteAttachment(id, displayName) {
+    if (!confirm(`Eyða viðhenginu „${displayName}"? Þetta er óafturkræft.`)) return;
     try {
       await fetch(FLOW_EYDA_VIDHENGI, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ TilkynningID: currentCommentsTilkynningId, FileName: fileName })
+        body: JSON.stringify({ TilkynningID: currentCommentsTilkynningId, FileName: id })
       });
       notify('dashNotify', 'Viðhengi eytt.', 'success');
       loadAttachments();
