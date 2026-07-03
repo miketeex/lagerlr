@@ -318,6 +318,22 @@
     .section-title { font-size: 16px; font-weight: 700; color: var(--text-primary); margin: 28px 0 14px; display: flex; align-items: center; gap: 8px; }
     .section-title:first-child { margin-top: 0; }
     .section-title [data-lucide] { color: var(--elko-green); }
+
+    .kpi-row { margin-bottom: 12px; }
+    .kpi-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 18px 24px;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px 20px;
+    }
+    .kpi-label { font-size: 13px; font-weight: 600; color: var(--text-secondary); flex: 1 1 200px; }
+    .kpi-number { font-size: 28px; font-weight: 700; color: var(--stat-number); }
+    .kpi-sub { font-size: 12px; color: var(--text-muted); flex-basis: 100%; }
   </style>
 </head>
 <body>
@@ -1012,22 +1028,33 @@
 
       const now = new Date();
       const today = now.toISOString().split('T')[0];
+      const toISO = d => d.toISOString().split('T')[0];
+
+      const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+      const lastMonthCutoffRaw = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+      const lastMonthCutoff = lastMonthCutoffRaw > endOfLastMonth ? endOfLastMonth : lastMonthCutoffRaw;
+
+      const startOfThisYear = new Date(now.getFullYear(), 0, 1);
+      const startOfLastYear = new Date(now.getFullYear() - 1, 0, 1);
+      const lastYearCutoff = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+
+      const countInRange = (from, to) => items.filter(i => {
+        const d = (i.Dagsetning || '').split('T')[0];
+        return d >= from && d <= to;
+      }).length;
+
+      const mtdThis = countInRange(toISO(startOfThisMonth), today);
+      const mtdLast = countInRange(toISO(startOfLastMonth), toISO(lastMonthCutoff));
+      const ytdThis = countInRange(toISO(startOfThisYear), today);
+      const ytdLast = countInRange(toISO(startOfLastYear), toISO(lastYearCutoff));
+      const allTimeCount = items.length;
+
       const weekAgo = new Date(now - 7 * 86400000).toISOString().split('T')[0];
-      const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-      const lastMonth = `${now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()}-${String(now.getMonth() === 0 ? 12 : now.getMonth()).padStart(2, '0')}`;
-      const thisYear = `${now.getFullYear()}`;
-      const lastYear = `${now.getFullYear() - 1}`;
-
       const countByDate = (from) => items.filter(i => (i.Dagsetning || '').split('T')[0] >= from).length;
-      const countByMonth = (m) => items.filter(i => (i.Dagsetning || '').startsWith(m)).length;
-      const countByYear = (y) => items.filter(i => (i.Dagsetning || '').startsWith(y)).length;
-
       const todayCount = items.filter(i => (i.Dagsetning || '').split('T')[0] === today).length;
       const weekCount = countByDate(weekAgo);
-      const monthCount = countByMonth(thisMonth);
-      const lastMonthCount = countByMonth(lastMonth);
-      const yearCount = countByYear(thisYear);
-      const lastYearCount = countByYear(lastYear);
 
       const byAstæda = {};
       items.forEach(i => {
@@ -1045,12 +1072,32 @@
 
       panel.innerHTML = `
         <h3 class="section-title"><i data-lucide="bar-chart-3"></i>Yfirlit</h3>
-        <div class="stats-grid">
+
+        <div class="kpi-row">
+          <div class="kpi-card">
+            <div class="kpi-label">MTD — það sem af er mánuði</div>
+            <div class="kpi-number">${mtdThis}${diff(mtdThis, mtdLast)}</div>
+            <div class="kpi-sub">Sami dagafjöldi í síðasta mánuði: ${mtdLast}</div>
+          </div>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-card">
+            <div class="kpi-label">YTD — það sem af er ári</div>
+            <div class="kpi-number">${ytdThis}${diff(ytdThis, ytdLast)}</div>
+            <div class="kpi-sub">Sama tímabil í fyrra: ${ytdLast}</div>
+          </div>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-card">
+            <div class="kpi-label">Frá upphafi (alltime)</div>
+            <div class="kpi-number">${allTimeCount}</div>
+            <div class="kpi-sub">Samtals allar tilkynningar í kerfinu</div>
+          </div>
+        </div>
+
+        <div class="stats-grid" style="margin-top:16px;">
           <div class="stat-card"><div class="number">${todayCount}</div><div class="label">Í dag</div></div>
           <div class="stat-card"><div class="number">${weekCount}</div><div class="label">Síðustu 7 dagar</div></div>
-          <div class="stat-card"><div class="number">${monthCount} ${diff(monthCount, lastMonthCount)}</div><div class="label">Þessi mánuður vs síðasti (${lastMonthCount})</div></div>
-          <div class="stat-card"><div class="number">${yearCount} ${diff(yearCount, lastYearCount)}</div><div class="label">Þetta ár vs í fyrra (${lastYearCount})</div></div>
-          <div class="stat-card"><div class="number">${items.length}</div><div class="label">Samtals tilkynningar</div></div>
         </div>
         <h3 class="section-title"><i data-lucide="list-tree"></i>Eftir ástæðu</h3>
         <div class="stats-grid">
