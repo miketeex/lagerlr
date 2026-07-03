@@ -122,6 +122,30 @@
   .selection-summary span { display: flex; align-items: center; gap: 4px; }
   .selection-summary strong { color: var(--text-primary); }
   .selection-summary a { color: var(--primary); font-size: 12px; text-decoration: underline; }
+
+  .dropzone {
+    border: 1.5px dashed var(--border);
+    border-radius: var(--radius-btn);
+    padding: 24px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+    background: var(--surface);
+  }
+  .dropzone:hover, .dropzone.dragover { border-color: var(--primary); background: rgba(120,162,47,0.05); }
+  .dropzone [data-lucide] { width: 26px; height: 26px; color: var(--primary); margin-bottom: 8px; }
+  .dropzone-text { font-size: 13px; color: var(--text-primary); margin-bottom: 4px; }
+  .dropzone-sub { font-size: 11px; color: var(--text-muted); }
+
+  #dropzoneFile { display: flex; align-items: center; gap: 10px; justify-content: center; }
+  #dropzoneFile [data-lucide] { width: 20px; height: 20px; margin-bottom: 0; color: var(--primary); }
+  .dropzone-filename { font-size: 13px; font-weight: 600; color: var(--text-primary); flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dropzone-remove {
+    background: var(--hover); border: none; border-radius: 50%; width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-muted); flex-shrink: 0;
+  }
+  .dropzone-remove:hover { color: var(--text-primary); }
+  .dropzone-remove [data-lucide] { width: 14px; height: 14px; margin: 0; color: inherit; }
 </style>
 </head>
 <body>
@@ -208,8 +232,19 @@
 
       <div class="field">
         <label>Viðhengi (valfrjálst)</label>
-        <input type="file" id="vidhengi" accept="image/jpeg,image/png,application/pdf">
-        <div class="vara-desc">Mynd eða PDF, t.d. ljósmynd af skemmd eða kvittun.</div>
+        <div class="dropzone" id="dropzone" onclick="document.getElementById('vidhengi').click()">
+          <input type="file" id="vidhengi" accept="image/jpeg,image/png,application/pdf" style="display:none;" onchange="handleFileChange(this.files[0])">
+          <div id="dropzoneEmpty">
+            <i data-lucide="upload-cloud"></i>
+            <div class="dropzone-text"><strong>Smelltu til að velja skrá</strong> eða dragðu hingað</div>
+            <div class="dropzone-sub">Mynd (JPG/PNG) eða PDF, t.d. ljósmynd af skemmd eða kvittun</div>
+          </div>
+          <div id="dropzoneFile" style="display:none;">
+            <i data-lucide="file-check-2"></i>
+            <div class="dropzone-filename" id="dropzoneFilename"></div>
+            <button type="button" class="dropzone-remove" onclick="event.stopPropagation(); clearFile();"><i data-lucide="x"></i></button>
+          </div>
+        </div>
       </div>
 
       <div class="step-actions">
@@ -353,6 +388,44 @@
     }
   });
 
+  function handleFileChange(file) {
+    const emptyEl = document.getElementById('dropzoneEmpty');
+    const fileEl = document.getElementById('dropzoneFile');
+    if (file) {
+      document.getElementById('dropzoneFilename').textContent = file.name;
+      emptyEl.style.display = 'none';
+      fileEl.style.display = 'flex';
+      if (window.lucide) lucide.createIcons();
+    } else {
+      emptyEl.style.display = 'block';
+      fileEl.style.display = 'none';
+    }
+  }
+
+  function clearFile() {
+    document.getElementById('vidhengi').value = '';
+    handleFileChange(null);
+  }
+
+  (function setupDropzone() {
+    const zone = document.getElementById('dropzone');
+    const input = document.getElementById('vidhengi');
+    if (!zone || !input) return;
+    ['dragenter', 'dragover'].forEach(evt => {
+      zone.addEventListener(evt, e => { e.preventDefault(); zone.classList.add('dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(evt => {
+      zone.addEventListener(evt, e => { e.preventDefault(); zone.classList.remove('dragover'); });
+    });
+    zone.addEventListener('drop', e => {
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        input.files = e.dataTransfer.files;
+        handleFileChange(file);
+      }
+    });
+  })();
+
   function fileToBase64(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -418,6 +491,7 @@
     document.getElementById('lysing').value = '';
     document.getElementById('tilkynnir').value = '';
     document.getElementById('vidhengi').value = '';
+    handleFileChange(null);
     selectedVorunumer = '';
     selectedVara = '';
     selectedAstaeda = '';
