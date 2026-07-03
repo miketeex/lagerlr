@@ -1,258 +1,565 @@
 <!DOCTYPE html>
 <html lang="is">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lagerleiðrétting</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-<style>
-  :root {
-    --primary: #78A22F;
-    --primary-hover: #689326;
-    --primary-light: #A6CF54;
-
-    --bg: #F6F8FA;
-    --surface: #FFFFFF;
-    --card: #FFFFFF;
-    --hover: #F2F5F7;
-    --border: #E3E8EE;
-    --text-primary: #1D232A;
-    --text-secondary: #5C6675;
-    --text-muted: #8D96A4;
-
-    --radius-card: 16px;
-    --radius-btn: 12px;
-    --shadow-sm: 0 2px 6px rgba(0,0,0,.08);
-  }
-
-  @media (prefers-color-scheme: dark) {
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lagerleiðrétting — Stjórnborð</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <style>
     :root {
-      --bg: #181B1F;
-      --surface: #20242A;
-      --card: #262B31;
-      --hover: #2F353D;
-      --border: #343B44;
-      --text-primary: #F5F7FA;
-      --text-secondary: #B0B8C4;
-      --text-muted: #7E8794;
+      /* Legacy variable names kept intentionally — reused throughout generated
+         HTML below. Redefining them here re-themes the whole page. */
+      --elko-green: #78A22F;
+      --elko-dark: #163019;
+
+      --primary: #78A22F;
+      --primary-hover: #689326;
+
+      --bg: #F6F8FA;
+      --surface: #FFFFFF;
+      --card: #FFFFFF;
+      --hover: #F2F5F7;
+      --border: #E3E8EE;
+      --text-primary: #1D232A;
+      --text-secondary: #5C6675;
+      --text-muted: #8D96A4;
+
+      --radius-card: 16px;
+      --radius-btn: 12px;
+      --shadow-sm: 0 2px 6px rgba(0,0,0,.08);
+
+      --stat-number: #163019;
+      --badge-info-bg: rgba(45,156,219,0.12);
+      --badge-info-text: #1c6ea4;
+      --badge-warning-bg: rgba(244,183,64,0.18);
+      --badge-warning-text: #8a5e0a;
+      --badge-success-bg: rgba(56,178,74,0.12);
+      --badge-success-text: #2b8a3e;
+      --badge-danger-bg: rgba(224,83,83,0.12);
+      --badge-danger-text: #c0392b;
     }
-  }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text-primary); font-size: 15px; line-height: 1.5; }
-  [data-lucide] { width: 16px; height: 16px; stroke-width: 1.8; flex-shrink: 0; vertical-align: -3px; }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #181B1F;
+        --surface: #20242A;
+        --card: #262B31;
+        --hover: #2F353D;
+        --border: #343B44;
+        --text-primary: #F5F7FA;
+        --text-secondary: #B0B8C4;
+        --text-muted: #7E8794;
 
-  body.embedded .page-header { display: none; }
+        --stat-number: #A6CF54;
+        --badge-info-bg: rgba(45,156,219,0.2);
+        --badge-info-text: #8ecbf2;
+        --badge-warning-bg: rgba(244,183,64,0.22);
+        --badge-warning-text: #f7d38a;
+        --badge-success-bg: rgba(56,178,74,0.2);
+        --badge-success-text: #8fe0a5;
+        --badge-danger-bg: rgba(224,83,83,0.22);
+        --badge-danger-text: #f4a3a3;
+      }
+    }
 
-  .page-header { display: flex; align-items: center; gap: 12px; padding: 18px 32px; border-bottom: 1px solid var(--border); background: var(--surface); }
-  .page-header img { height: 28px; }
-  .page-header .titles { line-height: 1.25; }
-  .page-header .kicker { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
-  .page-header .title { font-size: 18px; font-weight: 700; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text-primary); }
 
-  .container { max-width: 620px; margin: 0 auto; padding: 32px 20px 64px; }
+    body.embedded .page-header { display: none; }
 
-  .notify { padding: 12px 18px; border-radius: var(--radius-btn); margin-bottom: 16px; font-size: 14px; display: none; }
-  .notify.success { background: rgba(56,178,74,0.12); color: #2b8a3e; border: 1px solid rgba(56,178,74,0.3); display: block; }
-  .notify.error { background: rgba(224,83,83,0.12); color: #c0392b; border: 1px solid rgba(224,83,83,0.3); display: block; }
+    #syncIndicator {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 3000;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 7px 14px;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      box-shadow: var(--shadow-sm);
+    }
+    #syncIndicator.active { display: flex; }
+    #syncIndicator [data-lucide] { width: 13px; height: 13px; color: var(--elko-green); animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-  .step-progress { display: flex; align-items: center; gap: 8px; margin-bottom: 24px; }
-  .step-dot {
-    width: 28px; height: 28px; border-radius: 50%; background: var(--card);
-    color: var(--text-muted); border: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 12px; font-weight: 700; flex-shrink: 0; transition: all 0.2s ease;
-  }
-  .step-dot.current { background: var(--primary); color: #fff; border-color: var(--primary); }
-  .step-dot.done { background: var(--text-primary); color: var(--surface); border-color: var(--text-primary); }
-  .step-line { flex: 1; height: 1px; background: var(--border); }
+    .elko-btn {
+      background: var(--elko-green);
+      color: white;
+      border: none;
+      padding: 10px 24px;
+      border-radius: var(--radius-btn);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
 
-  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 32px; }
-  .card h2 { font-size: 18px; font-weight: 700; margin-bottom: 22px; }
+    .elko-btn:hover { background: var(--primary-hover); }
+    .elko-btn-secondary { background: var(--card); color: var(--text-primary); border: 1px solid var(--border); }
+    .elko-btn-secondary:hover { border-color: var(--elko-green); background: var(--card); }
+    .elko-btn-danger { background: #E05353; }
+    .elko-btn-danger:hover { background: #c23e3e; }
+    .elko-btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; }
 
-  .field { margin-bottom: 16px; }
-  .field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary); }
-  .field input, .field select, .field textarea {
-    width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: var(--radius-btn);
-    font-size: 14px; font-family: inherit; background: var(--surface); color: var(--text-primary);
-  }
-  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--primary); outline: none; }
-  .field textarea { resize: vertical; min-height: 100px; }
-  .field .vara-desc { font-size: 12px; color: var(--text-muted); margin-top: 6px; min-height: 16px; }
+    .icon-action-btn {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 8px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .icon-action-btn:hover { border-color: var(--elko-green); color: var(--elko-green); }
+    .icon-action-warn:hover { border-color: #F4B740; color: var(--badge-warning-text); }
+    .icon-action-danger:hover { border-color: #E05353; color: var(--badge-danger-text); }
 
-  .autocomplete-wrapper { position: relative; }
-  .autocomplete-list {
-    position: absolute; top: 100%; left: 0; right: 0;
-    background: var(--surface); border: 1px solid var(--border); border-top: none;
-    border-radius: 0 0 var(--radius-btn) var(--radius-btn);
-    max-height: 220px; overflow-y: auto; z-index: 100; display: none;
-    box-shadow: var(--shadow-sm);
-  }
-  .autocomplete-list.active { display: block; }
-  .autocomplete-item { padding: 9px 14px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--border); }
-  .autocomplete-item:last-child { border-bottom: none; }
-  .autocomplete-item:hover { background: var(--hover); }
-  .autocomplete-item span { color: var(--text-muted); font-size: 11px; margin-left: 8px; }
-  .autocomplete-item.eol { opacity: 0.55; font-style: italic; }
+    .elko-notify {
+      padding: 12px 20px;
+      border-radius: var(--radius-btn);
+      margin-bottom: 16px;
+      font-size: 14px;
+      display: none;
+    }
 
-  .choice-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 8px; }
-  .choice-grid.two-col { grid-template-columns: repeat(2, 1fr); }
-  .choice-btn {
-    padding: 16px 10px; border: 1px solid var(--border); border-radius: var(--radius-btn);
-    background: var(--card); color: var(--text-primary); font-family: inherit; font-size: 13px; font-weight: 600;
-    cursor: pointer; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px;
-  }
-  .choice-btn [data-lucide] { color: var(--primary); width: 20px; height: 20px; }
-  .choice-btn.active, .choice-btn:hover { border-color: var(--primary); background: rgba(120,162,47,0.06); }
+    .elko-notify.success { background: var(--badge-success-bg); color: var(--badge-success-text); border: 1px solid var(--badge-success-text); display: block; }
+    .elko-notify.error { background: var(--badge-danger-bg); color: var(--badge-danger-text); border: 1px solid var(--badge-danger-text); display: block; }
 
-  .btn { background: var(--primary); color: #fff; border: none; padding: 12px 24px; border-radius: var(--radius-btn); font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; width: 100%; margin-top: 8px; }
-  .btn:hover { background: var(--primary-hover); }
-  .btn-secondary { background: var(--card); color: var(--text-primary); border: 1px solid var(--border); }
-  .btn-secondary:hover { border-color: var(--primary); background: var(--card); }
+    .login-wrap {
+      max-width: 400px;
+      margin: 80px auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 30px;
+      border-radius: var(--radius-card);
+    }
 
-  .step-actions { display: flex; gap: 10px; margin-top: 8px; }
-  .step-actions .btn { margin-top: 0; }
+    .login-wrap h2 { color: var(--text-primary); margin-bottom: 20px; font-weight: 700; }
 
-  .form-section { display: none; }
-  .form-section.active { display: block; }
+    .elko-field { margin-bottom: 16px; }
+    .elko-field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary); }
+    .elko-field input, .elko-field select {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-btn);
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      background: var(--surface);
+      color: var(--text-primary);
+    }
 
-  .selection-summary { font-size: 13px; color: var(--text-secondary); margin-bottom: 18px; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
-  .selection-summary span { display: flex; align-items: center; gap: 4px; }
-  .selection-summary strong { color: var(--text-primary); }
-  .selection-summary a { color: var(--primary); font-size: 12px; text-decoration: underline; }
+    .elko-field input:focus, .elko-field select:focus {
+      border-color: var(--elko-green);
+      outline: none;
+    }
 
-  .dropzone {
-    border: 1.5px dashed var(--border);
-    border-radius: var(--radius-btn);
-    padding: 24px 16px;
-    text-align: center;
-    cursor: pointer;
-    transition: border-color 0.15s ease, background 0.15s ease;
-    background: var(--surface);
-  }
-  .dropzone:hover, .dropzone.dragover { border-color: var(--primary); background: rgba(120,162,47,0.05); }
-  .dropzone [data-lucide] { width: 26px; height: 26px; color: var(--primary); margin-bottom: 8px; }
-  .dropzone-text { font-size: 13px; color: var(--text-primary); margin-bottom: 4px; }
-  .dropzone-sub { font-size: 11px; color: var(--text-muted); }
+    .dashboard { display: none; }
+    .elko-container { max-width: 100%; margin: 30px auto; padding: 0 40px 40px 40px; }
 
-  .file-list { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
-  .file-chip {
-    display: flex; align-items: center; gap: 10px;
-    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-btn);
-    padding: 8px 10px;
-  }
-  .file-chip [data-lucide] { width: 18px; height: 18px; color: var(--primary); flex-shrink: 0; }
-  .file-chip-name { font-size: 13px; font-weight: 600; color: var(--text-primary); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .dropzone-remove {
-    background: var(--hover); border: none; border-radius: 50%; width: 22px; height: 22px;
-    display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-muted); flex-shrink: 0;
-  }
-  .dropzone-remove:hover { color: var(--text-primary); }
-  .dropzone-remove [data-lucide] { width: 13px; height: 13px; margin: 0; color: inherit; }
-</style>
+    .elko-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .elko-tab {
+      padding: 10px 24px;
+      border-radius: var(--radius-btn);
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .elko-tab.active { background: var(--elko-green); color: white; border-color: var(--elko-green); }
+
+    .elko-panel { display: none; }
+    .elko-panel.active { display: block; }
+
+    .elko-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-card); }
+
+    table {
+      width: 100%;
+      min-width: 950px;
+      border-collapse: collapse;
+      background: var(--card);
+    }
+
+    th {
+      background: var(--hover);
+      color: var(--text-secondary);
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    td {
+      padding: 10px 16px;
+      font-size: 13px;
+      border-top: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    tr:hover td { background: var(--hover); }
+
+    .sortable-th { cursor: pointer; user-select: none; white-space: nowrap; }
+    .sortable-th:hover { color: var(--text-primary); }
+    .sort-arrow { font-size: 10px; color: var(--primary); }
+
+    .filter-row-th th { padding: 6px 16px; background: var(--surface); border-top: none; }
+    .col-filter-input {
+      width: 100%; padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px;
+      font-size: 12px; font-family: 'Inter', sans-serif; background: var(--card); color: var(--text-primary);
+    }
+    .col-filter-input:focus { border-color: var(--elko-green); outline: none; }
+
+    .stada-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .stada-Ný { background: var(--badge-info-bg); color: var(--badge-info-text); }
+    .stada-Í.vinnslu { background: var(--badge-warning-bg); color: var(--badge-warning-text); }
+    .stada-Lokið { background: var(--badge-success-bg); color: var(--badge-success-text); }
+
+    .elko-filters {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .elko-filters select, .elko-filters input {
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-btn);
+      font-size: 13px;
+      font-family: 'Inter', sans-serif;
+      background: var(--surface);
+      color: var(--text-primary);
+    }
+
+    .page-header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      color: var(--text-primary);
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .page-header-left { display: flex; align-items: center; gap: 12px; }
+    .page-header img { height: 28px; display: block; }
+    .page-header .titles { line-height: 1.25; }
+    .page-header .kicker { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
+    .page-header .title { font-size: 17px; font-weight: 700; }
+
+    .user-chip { display: flex; align-items: center; gap: 12px; }
+    .user-chip .avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--elko-green); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; flex-shrink: 0;
+    }
+    .user-info { font-size: 13px; line-height: 1.3; }
+    .user-info .name { font-weight: 600; color: var(--text-primary); }
+    .user-info .role { color: var(--text-muted); font-size: 12px; }
+    .logout-btn {
+      width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border);
+      background: var(--card); color: var(--text-secondary); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logout-btn:hover { border-color: var(--elko-green); color: var(--elko-green); }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 20px;
+      text-align: center;
+    }
+
+    .stat-card .number { font-size: 32px; font-weight: 700; color: var(--stat-number); }
+    .stat-card .label { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+
+    .section-title { font-size: 16px; font-weight: 700; color: var(--text-primary); margin: 28px 0 14px; display: flex; align-items: center; gap: 8px; }
+    .section-title:first-child { margin-top: 0; }
+    .section-title [data-lucide] { color: var(--elko-green); }
+
+    .subsection-label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin: 14px 0 8px; text-transform: uppercase; letter-spacing: 0.02em; }
+    .subsection-label:first-of-type { margin-top: 4px; }
+    .clickable-row { cursor: pointer; }
+
+    .overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      z-index: 2000; align-items: center; justify-content: center; padding: 20px;
+    }
+    .overlay.active { display: flex; }
+
+    .modal {
+      background: var(--surface); border-radius: var(--radius-card);
+      padding: 26px; max-width: 520px; width: 100%; max-height: 80vh;
+      display: flex; flex-direction: column;
+    }
+    .modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .modal .modal-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
+
+    .comments-list { overflow-y: auto; flex: 1; margin-bottom: 16px; display: flex; flex-direction: column; gap: 10px; max-height: 300px; }
+    .comment-item { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
+    .comment-item .meta { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+    .comment-item .meta strong { color: var(--text-secondary); }
+    .comment-item .text { font-size: 13px; color: var(--text-primary); white-space: pre-wrap; }
+    .comment-actions { display: flex; gap: 4px; }
+    .comment-actions button {
+      background: none; border: none; padding: 2px; cursor: pointer; color: var(--text-muted);
+      display: flex; align-items: center;
+    }
+    .comment-actions button:hover { color: var(--text-primary); }
+    .comment-edit-form { display: flex; flex-direction: column; gap: 6px; }
+    .comment-edit-form textarea {
+      padding: 8px 10px; border: 1px solid var(--elko-green); border-radius: 8px;
+      font-size: 13px; font-family: 'Inter', sans-serif; background: var(--surface); color: var(--text-primary);
+      resize: vertical; min-height: 44px;
+    }
+    .comment-edit-actions { display: flex; gap: 6px; justify-content: flex-end; }
+    .comments-empty { font-size: 13px; color: var(--text-muted); padding: 12px 0; text-align: center; }
+
+    .comment-form { display: flex; gap: 8px; align-items: flex-end; }
+    .comment-form textarea {
+      flex: 1; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-btn);
+      font-size: 13px; font-family: 'Inter', sans-serif; background: var(--card); color: var(--text-primary);
+      resize: vertical; min-height: 44px; max-height: 120px;
+    }
+    .comment-form textarea:focus { border-color: var(--elko-green); outline: none; }
+
+    .modal-close { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; }
+    .modal-close:hover { color: var(--text-primary); }
+    .modal-header { display: flex; align-items: flex-start; justify-content: space-between; }
+
+    .modal-tabs { display: flex; gap: 6px; margin: 14px 0 14px; border-bottom: 1px solid var(--border); }
+    .modal-tab {
+      background: none; border: none; padding: 8px 4px; margin-bottom: -1px;
+      font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; color: var(--text-muted);
+      cursor: pointer; border-bottom: 2px solid transparent;
+    }
+    .modal-tab.active { color: var(--elko-green); border-bottom-color: var(--elko-green); }
+
+    .modal-panel { display: none; flex-direction: column; flex: 1; min-height: 0; }
+    .modal-panel.active { display: flex; }
+
+    .attachments-list { overflow-y: auto; flex: 1; margin-bottom: 14px; display: flex; flex-direction: column; gap: 8px; max-height: 260px; }
+    .attachment-item {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px;
+    }
+    .attachment-item [data-lucide] { width: 18px; height: 18px; color: var(--elko-green); flex-shrink: 0; }
+    .attachment-item a { flex: 1; font-size: 13px; color: var(--text-primary); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .attachment-item a:hover { color: var(--elko-green); text-decoration: underline; }
+    .attachments-empty { font-size: 13px; color: var(--text-muted); padding: 12px 0; text-align: center; }
+
+    .admin-dropzone {
+      border: 1.5px dashed var(--border); border-radius: var(--radius-btn);
+      padding: 16px; text-align: center; cursor: pointer; font-size: 12px; color: var(--text-muted);
+    }
+    .admin-dropzone:hover { border-color: var(--elko-green); }
+    .admin-dropzone [data-lucide] { width: 18px; height: 18px; color: var(--elko-green); margin-bottom: 4px; }
+
+    .preview-modal { position: relative; max-width: 92vw; max-height: 92vh; display: flex; align-items: center; justify-content: center; }
+    .preview-close {
+      position: absolute; top: -44px; right: 0;
+      background: var(--card); border: 1px solid var(--border);
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-secondary); cursor: pointer;
+    }
+    .preview-close:hover { color: var(--text-primary); }
+    #previewContent { display: flex; align-items: center; justify-content: center; overflow: auto; max-width: 92vw; max-height: 92vh; }
+    #previewContent img {
+      max-width: 92vw; max-height: 92vh; border-radius: var(--radius-card);
+      cursor: zoom-in; object-fit: contain; display: block;
+    }
+    #previewContent img.zoomed { max-width: none; max-height: none; cursor: zoom-out; }
+    #previewContent iframe {
+      width: 85vw; height: 85vh; border: none; border-radius: var(--radius-card); background: white;
+    }
+    #previewContent .preview-fallback { background: var(--card); border-radius: var(--radius-card); padding: 30px; text-align: center; color: var(--text-secondary); font-size: 13px; }
+    #previewContent .preview-fallback a { color: var(--elko-green); font-weight: 600; }
+  </style>
 </head>
 <body>
 
 <div class="page-header">
-  <img src="images/ELKO_logo_SVG.svg" alt="ELKO">
-  <div class="titles">
-    <div class="kicker">Lager</div>
-    <div class="title">Lagerleiðrétting</div>
+  <div class="page-header-left">
+    <img src="images/ELKO_logo_SVG.svg" alt="ELKO">
+    <div class="titles">
+      <div class="kicker">Lager</div>
+      <div class="title">Lagerleiðrétting — Stjórnborð</div>
+    </div>
+  </div>
+  <div id="headerUser" class="user-chip" style="display:none;">
+    <div class="avatar" id="headerAvatar"></div>
+    <div class="user-info">
+      <div class="name" id="headerUserName"></div>
+      <div class="role" id="headerUserRole"></div>
+    </div>
+    <button class="logout-btn" title="Útskrá" onclick="logout()"><i data-lucide="log-out" style="width:16px; height:16px;"></i></button>
   </div>
 </div>
 
-<div class="container">
+<div id="syncIndicator">
+  <i data-lucide="loader-circle"></i>
+  <span>Sæki gögn...</span>
+</div>
 
-  <div id="notify" class="notify"></div>
-
-  <div class="step-progress">
-    <div class="step-dot current" id="dot1">1</div>
-    <div class="step-line"></div>
-    <div class="step-dot" id="dot2">2</div>
-    <div class="step-line"></div>
-    <div class="step-dot" id="dot3">3</div>
+<div id="loginPanel">
+  <div class="login-wrap">
+    <h2>Innskráning</h2>
+    <div id="loginNotify" class="elko-notify"></div>
+    <div class="elko-field">
+      <label>Netfang</label>
+      <input type="email" id="loginEmail" placeholder="netfang@elko.is" onkeydown="if(event.key==='Enter') login()">
+    </div>
+    <div class="elko-field">
+      <label>Lykilorð</label>
+      <input type="password" id="loginPassword" placeholder="Lykilorð" onkeydown="if(event.key==='Enter') login()">
+    </div>
+    <button class="elko-btn" style="width:100%;" onclick="login()">Innskrá</button>
+    <p style="text-align:center; margin-top:12px;"><a href="#" onclick="showForgot()" style="font-size:13px; color:var(--elko-dark);">Gleymt lykilorð?</a></p>
   </div>
+</div>
 
-  <div id="storeSection" class="form-section active">
-    <div class="card">
-      <h2>1. Veldu verslun</h2>
-      <div class="choice-grid">
-        <button class="choice-btn" onclick="selectStore('ELKO Lindir', this)"><i data-lucide="store"></i>ELKO Lindir</button>
-        <button class="choice-btn" onclick="selectStore('ELKO Smáralind', this)"><i data-lucide="store"></i>ELKO Smáralind</button>
-        <button class="choice-btn" onclick="selectStore('ELKO Skeifan', this)"><i data-lucide="store"></i>ELKO Skeifan</button>
-        <button class="choice-btn" onclick="selectStore('ELKO Grandi', this)"><i data-lucide="store"></i>ELKO Grandi</button>
-        <button class="choice-btn" onclick="selectStore('ELKO Akureyri', this)"><i data-lucide="store"></i>ELKO Akureyri</button>
-        <button class="choice-btn" onclick="selectStore('ELKO Flugstöð', this)"><i data-lucide="store"></i>ELKO Flugstöð</button>
+<div id="setPasswordPanel" style="display:none;">
+  <div class="login-wrap">
+    <h2>Búðu til lykilorð</h2>
+    <p style="font-size:13px; color:#666; margin-bottom:20px;">Þetta er fyrsta innskráning þín — veldu lykilorð.</p>
+    <div id="setPasswordNotify" class="elko-notify"></div>
+    <div class="elko-field">
+      <label>Nýtt lykilorð</label>
+      <input type="password" id="newPassword1" placeholder="Lykilorð">
+    </div>
+    <div class="elko-field">
+      <label>Staðfestu lykilorð</label>
+      <input type="password" id="newPassword2" placeholder="Lykilorð aftur">
+    </div>
+    <button class="elko-btn" style="width:100%;" onclick="setPassword()">Vista lykilorð</button>
+  </div>
+</div>
+
+<div id="forgotPanel" style="display:none;">
+  <div class="login-wrap">
+    <h2>Gleymt lykilorð</h2>
+    <p style="font-size:13px; color:#666; margin-bottom:20px;">Sláðu inn netfangið þitt og við sendum þér endurstillingarkóða.</p>
+    <div id="forgotNotify" class="elko-notify"></div>
+    <div class="elko-field">
+      <label>Netfang</label>
+      <input type="email" id="forgotEmail" placeholder="netfang@elko.is">
+    </div>
+    <button class="elko-btn" style="width:100%;" onclick="sendResetCode()">Senda kóða</button>
+    <p style="text-align:center; margin-top:16px;"><a href="#" onclick="showLogin()" style="font-size:13px; color:var(--elko-dark);">← Til baka</a></p>
+  </div>
+</div>
+
+<div id="resetCodePanel" style="display:none;">
+  <div class="login-wrap">
+    <h2>Sláðu inn kóða</h2>
+    <p style="font-size:13px; color:#666; margin-bottom:20px;">Við sendum þér 6 stafa kóða í tölvupóst.</p>
+    <div id="resetCodeNotify" class="elko-notify"></div>
+    <div class="elko-field">
+      <label>Kóði</label>
+      <input type="text" id="resetCode" placeholder="6 stafir" maxlength="6">
+    </div>
+    <div class="elko-field">
+      <label>Nýtt lykilorð</label>
+      <input type="password" id="resetPassword1" placeholder="Lykilorð">
+    </div>
+    <div class="elko-field">
+      <label>Staðfestu lykilorð</label>
+      <input type="password" id="resetPassword2" placeholder="Lykilorð aftur">
+    </div>
+    <button class="elko-btn" style="width:100%;" onclick="confirmReset()">Vista nýtt lykilorð</button>
+  </div>
+</div>
+
+<div class="dashboard" id="dashboard">
+  <div class="elko-container">
+    <div id="dashNotify" class="elko-notify"></div>
+    <div class="elko-tabs" id="tabBar"></div>
+    <div id="panelContainer"></div>
+  </div>
+</div>
+
+<div class="overlay" id="commentsOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <h3 id="commentsTitle">Tilkynning</h3>
+        <div class="modal-sub" id="commentsSub"></div>
+      </div>
+      <button class="modal-close" onclick="closeComments()"><i data-lucide="x" style="width:18px; height:18px;"></i></button>
+    </div>
+
+    <div class="modal-tabs">
+      <button class="modal-tab active" id="modalTabComments" onclick="switchModalTab('comments', this)">Athugasemdir</button>
+      <button class="modal-tab" id="modalTabAttachments" onclick="switchModalTab('attachments', this)">Viðhengi</button>
+    </div>
+
+    <div class="modal-panel active" id="modalPanelComments">
+      <div class="comments-list" id="commentsList"></div>
+      <div class="comment-form">
+        <textarea id="newCommentText" placeholder="Skrifaðu athugasemd..."></textarea>
+        <button class="elko-btn elko-btn-sm" onclick="submitComment()"><i data-lucide="send" style="width:14px; height:14px;"></i></button>
+      </div>
+    </div>
+
+    <div class="modal-panel" id="modalPanelAttachments">
+      <div class="attachments-list" id="attachmentsList"></div>
+      <div class="admin-dropzone" id="adminDropzone" onclick="document.getElementById('adminFileInput').click()">
+        <input type="file" id="adminFileInput" accept="image/jpeg,image/png,application/pdf" multiple style="display:none;" onchange="adminUploadFiles(this.files)">
+        <i data-lucide="upload-cloud"></i>
+        <div>Smelltu til að hlaða upp viðhengi</div>
       </div>
     </div>
   </div>
+</div>
 
-  <div id="reasonSection" class="form-section">
-    <div class="card">
-      <div class="selection-summary">
-        <span><i data-lucide="store" style="width:14px; height:14px; color:var(--primary);"></i>Verslun: <strong id="summaryStore1"></strong></span>
-        <a href="#" onclick="goStep(1); return false;">Breyta</a>
-      </div>
-      <h2>2. Veldu ástæðu</h2>
-      <div class="choice-grid two-col">
-        <button class="choice-btn" onclick="selectReason('Gallað', this)"><i data-lucide="alert-triangle"></i>Gallað</button>
-        <button class="choice-btn" onclick="selectReason('Ósöluhæft', this)"><i data-lucide="package-x"></i>Ósöluhæft</button>
-        <button class="choice-btn" onclick="selectReason('Þjófnaður', this)"><i data-lucide="shield-alert"></i>Þjófnaður</button>
-        <button class="choice-btn" onclick="selectReason('Lagerleiðrétting', this)"><i data-lucide="clipboard-check"></i>Lagerleiðrétting</button>
-      </div>
-      <button class="btn btn-secondary" onclick="goStep(1)">← Til baka</button>
-    </div>
+<div class="overlay" id="previewOverlay" onclick="if(event.target===this) closePreview();">
+  <div class="preview-modal">
+    <button class="modal-close preview-close" onclick="closePreview()"><i data-lucide="x" style="width:18px; height:18px;"></i></button>
+    <div id="previewContent"></div>
   </div>
-
-  <div id="formSection" class="form-section">
-    <div class="card">
-      <div class="selection-summary">
-        <span><i data-lucide="store" style="width:14px; height:14px; color:var(--primary);"></i>Verslun: <strong id="summaryStore2"></strong></span>
-        <a href="#" onclick="goStep(1); return false;">Breyta</a>
-        <span><i data-lucide="tag" style="width:14px; height:14px; color:var(--primary);"></i>Ástæða: <strong id="summaryReason"></strong></span>
-        <a href="#" onclick="goStep(2); return false;">Breyta</a>
-      </div>
-      <h2>3. Upplýsingar um tilkynningu</h2>
-
-      <div class="field">
-        <label>Vörunúmer *</label>
-        <div class="autocomplete-wrapper">
-          <input type="text" id="vorunumer" placeholder="Sláðu inn vörunúmer..." autocomplete="off" oninput="searchProducts(this.value)">
-          <div class="autocomplete-list" id="autocompleteList"></div>
-        </div>
-        <div class="vara-desc" id="varaDesc"></div>
-      </div>
-
-      <div class="field">
-        <label>Nánari lýsing *</label>
-        <textarea id="lysing" placeholder="Útskýrðu hvað málið er og af hverju þú ert að setja inn þessa tilkynningu..."></textarea>
-      </div>
-
-      <div class="field">
-        <label>Hver tilkynnir *</label>
-        <input type="text" id="tilkynnir" placeholder="Sölustafir">
-      </div>
-
-      <div class="field" id="vidhengiField">
-        <label>Viðhengi (valfrjálst)</label>
-        <div class="dropzone" id="dropzone" onclick="document.getElementById('vidhengi').click()">
-          <input type="file" id="vidhengi" accept="image/jpeg,image/png,application/pdf" multiple style="display:none;" onchange="handleFilesChange(this.files)">
-          <i data-lucide="upload-cloud"></i>
-          <div class="dropzone-text"><strong>Smelltu til að velja skrár</strong> eða dragðu hingað</div>
-          <div class="dropzone-sub">Myndir (JPG/PNG) eða PDF — má velja fleiri en eina í einu, eða bæta við eftir á</div>
-        </div>
-        <div id="fileList" class="file-list"></div>
-      </div>
-
-      <div class="step-actions">
-        <button class="btn btn-secondary" onclick="goStep(2)">← Til baka</button>
-        <button class="btn" onclick="submitReport()">Senda tilkynningu</button>
-      </div>
-    </div>
-  </div>
-
 </div>
 
 <script>
@@ -262,185 +569,207 @@
   if (window.lucide) lucide.createIcons();
 
   const PROXY = 'https://lagerlr-proxy.pruins.workers.dev/api';
-  const FLOW_VORULIST = PROXY + '/vorulisti';
-  const FLOW_SUBMIT = PROXY + '/senda-tilkynningu';
+  const FLOW_NOTANDI = PROXY + '/notandi';
+  const FLOW_LYKILORD = PROXY + '/lykilord';
+  const FLOW_NYR_NOTANDI = PROXY + '/nyr-notandi';
+  const FLOW_TILKYNNINGAR = PROXY + '/tilkynningar';
+  const FLOW_UPPFAERA_STODU = PROXY + '/uppfaera-stodu';
+  const FLOW_RESET = PROXY + '/reset';
+  const FLOW_STADFESTA_RESET = PROXY + '/stadfesta-reset';
+  const FLOW_NOTENDUR = PROXY + '/notendur';
+  const FLOW_UPPFAERA_NOTANDA = PROXY + '/uppfaera-notanda';
+  const FLOW_ENDURSTILLA_NOTANDA = PROXY + '/endurstilla-notanda';
+  const FLOW_EYDA_NOTANDA = PROXY + '/eyda-notanda';
+  const FLOW_ATHUGASEMDIR = PROXY + '/athugasemdir';
+  const FLOW_SENDA_ATHUGASEMD = PROXY + '/senda-athugasemd';
+  const FLOW_VIDHENGI = PROXY + '/vidhengi';
   const FLOW_BAETA_VID_VIDHENGI = PROXY + '/baeta-vid-vidhengi';
+  const FLOW_EYDA_VIDHENGI = PROXY + '/eyda-vidhengi';
+  const FLOW_VIDHENGI_INNIHALD = PROXY + '/vidhengi-innihald';
+  const FLOW_UPPFAERA_ATHUGASEMD = PROXY + '/uppfaera-athugasemd';
+  const FLOW_EYDA_ATHUGASEMD = PROXY + '/eyda-athugasemd';
 
-  let selectedStore = '';
-  let selectedAstaeda = '';
-  let selectedVara = '';
-  let selectedVorunumer = '';
-  let searchTimeout = null;
+  let currentUser = null;
+  let pendingEmail = null;
+  let tilkynningarPage = 1;
+  const TILKYNNINGAR_PAGE_SIZE = 20;
+  let tilkynningarSort = { key: null, dir: 1 };
+  let tilkynningarColumnFilters = {};
 
-  function notify(msg, type) {
-    const el = document.getElementById('notify');
-    el.textContent = msg;
-    el.className = 'notify ' + type;
-    setTimeout(() => el.className = 'notify', 4000);
+  function showSync() {
+    const el = document.getElementById('syncIndicator');
+    if (el) { el.classList.add('active'); if (window.lucide) lucide.createIcons(); }
+  }
+  function hideSync() {
+    const el = document.getElementById('syncIndicator');
+    if (el) el.classList.remove('active');
   }
 
-  function goStep(n) {
-    document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
-    document.getElementById(['storeSection', 'reasonSection', 'formSection'][n - 1]).classList.add('active');
-    for (let i = 1; i <= 3; i++) {
-      const dot = document.getElementById('dot' + i);
-      dot.className = 'step-dot' + (i === n ? ' current' : i < n ? ' done' : '');
+  let tilkynningarRawCache = null;
+  let tilkynningarRawCacheTime = 0;
+  const TILKYNNINGAR_CACHE_TTL_MS = 20000;
+
+  async function fetchTilkynningarRaw(forceRefresh = false) {
+    const now = Date.now();
+    if (!forceRefresh && tilkynningarRawCache && (now - tilkynningarRawCacheTime) < TILKYNNINGAR_CACHE_TTL_MS) {
+      return tilkynningarRawCache;
     }
+    const res = await fetch(FLOW_TILKYNNINGAR, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    const data = await res.json();
+    const items = data.value || data;
+    tilkynningarRawCache = items;
+    tilkynningarRawCacheTime = now;
+    return items;
   }
 
-  function selectStore(store, btn) {
-    selectedStore = store;
-    document.getElementById('summaryStore1').textContent = store;
-    document.getElementById('summaryStore2').textContent = store;
-    goStep(2);
-  }
+  let athugasemdirRawCache = [];
+  let athugasemdirRawCacheTime = 0;
 
-  const ASTAEDUR_MED_VIDHENGI = ['Gallað', 'Þjófnaður', 'Ósöluhæft'];
-
-  function selectReason(reason, btn) {
-    selectedAstaeda = reason;
-    document.getElementById('summaryReason').textContent = reason;
-
-    const allowAttachment = ASTAEDUR_MED_VIDHENGI.includes(reason);
-    const vidhengiField = document.getElementById('vidhengiField');
-    vidhengiField.style.display = allowAttachment ? 'block' : 'none';
-    if (!allowAttachment) {
-      selectedFiles = [];
-      document.getElementById('vidhengi').value = '';
-      renderFileList();
+  async function fetchAthugasemdirRaw(forceRefresh = false) {
+    const now = Date.now();
+    if (!forceRefresh && athugasemdirRawCacheTime && (now - athugasemdirRawCacheTime) < TILKYNNINGAR_CACHE_TTL_MS) {
+      return athugasemdirRawCache;
     }
-
-    goStep(3);
+    const res = await fetch(FLOW_ATHUGASEMDIR, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    const data = await res.json();
+    const items = data.value || data || [];
+    athugasemdirRawCache = items;
+    athugasemdirRawCacheTime = now;
+    return items;
   }
 
-  function searchProducts(query) {
-    clearTimeout(searchTimeout);
-    selectedVara = '';
-    selectedVorunumer = '';
-    document.getElementById('varaDesc').textContent = '';
+  let currentCommentsTilkynningId = null;
+  let currentCommentsTilvisun = '';
 
-    if (query.length < 2) {
-      document.getElementById('autocompleteList').classList.remove('active');
-      return;
-    }
+  function openCommentsById(id) {
+    const source = window._currentTilkynningarItems || window._allTilkynningar || [];
+    const item = source.find(i => i.ID === id);
+    if (!item) return;
+    const vorunumer = item.V_x00f6_run_x00fa_mer || item.Vorunumer || '';
+    openComments(item.ID, item.Title || '', vorunumer);
+  }
 
-    searchTimeout = setTimeout(async () => {
+  function openComments(id, tilvisun, vorunumer) {
+    currentCommentsTilkynningId = id;
+    currentCommentsTilvisun = tilvisun;
+    document.getElementById('commentsSub').textContent = `${tilvisun} — ${vorunumer || ''}`;
+    document.getElementById('commentsList').innerHTML = '<p class="comments-empty">Hleður...</p>';
+    document.getElementById('newCommentText').value = '';
+    document.getElementById('modalTabComments').classList.add('active');
+    document.getElementById('modalTabAttachments').classList.remove('active');
+    document.getElementById('modalPanelComments').classList.add('active');
+    document.getElementById('modalPanelAttachments').classList.remove('active');
+    document.getElementById('commentsOverlay').classList.add('active');
+    if (window.lucide) lucide.createIcons();
+    loadComments();
+  }
+
+  function closeComments() {
+    document.getElementById('commentsOverlay').classList.remove('active');
+    currentCommentsTilkynningId = null;
+  }
+
+  function switchModalTab(tab, btn) {
+    document.querySelectorAll('.modal-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.modal-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(tab === 'comments' ? 'modalPanelComments' : 'modalPanelAttachments').classList.add('active');
+    if (tab === 'attachments') loadAttachments();
+  }
+
+  let attachmentCountCache = {};
+
+  async function loadAttachmentCountsForPage(items) {
+    const toFetch = items.filter(r => !(r.ID in attachmentCountCache));
+    await Promise.all(toFetch.map(async r => {
       try {
-        const res = await fetch(FLOW_VORULIST, {
+        const res = await fetch(FLOW_VIDHENGI, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ Query: query.trim().split(/\s+/)[0] })
+          body: JSON.stringify({ TilkynningID: r.ID })
         });
         const data = await res.json();
-        const raw = data.value || data;
-        const words = query.toLowerCase().trim().split(/\s+/);
-        const seen = new Set();
-        const items = raw.filter(i => {
-          if (seen.has(i.Title)) return false;
-          seen.add(i.Title);
-          const searchText = ((i.Title || '') + ' ' + (i.Vara || '')).toLowerCase();
-          return words.every(w => searchText.includes(w));
-        }).slice(0, 20);
-        renderAutocomplete(items);
+        const list = data.value || data || [];
+        attachmentCountCache[r.ID] = list.length;
       } catch(e) {
+        attachmentCountCache[r.ID] = 0;
+      }
+    }));
+
+    let iconsNeeded = false;
+    items.forEach(r => {
+      const el = document.getElementById('attCount-' + r.ID);
+      if (!el) return;
+      const count = attachmentCountCache[r.ID] || 0;
+      if (count > 0) {
+        el.innerHTML = ` <span style="display:inline-flex; align-items:center; gap:2px; font-size:11px; color:var(--text-muted); margin-left:6px;"><i data-lucide="paperclip" style="width:12px; height:12px;"></i>${count}</span>`;
+        iconsNeeded = true;
+      }
+    });
+    if (iconsNeeded && window.lucide) lucide.createIcons();
+  }
+
+  async function loadAttachments() {
+    const list = document.getElementById('attachmentsList');
+    list.innerHTML = '<p class="attachments-empty">Hleður...</p>';
+    try {
+      const res = await fetch(FLOW_VIDHENGI, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ TilkynningID: currentCommentsTilkynningId })
+      });
+      const data = await res.json();
+      const items = data.value || data || [];
+      const role = currentUser?.Hlutverk?.Value || currentUser?.Hlutverk || '';
+      const canDelete = role === 'Master';
+
+      if (!items.length) {
+        list.innerHTML = '<p class="attachments-empty">Engin viðhengi ennþá.</p>';
+        return;
+      }
+
+      list.innerHTML = items.map(a => `
+        <div class="attachment-item">
+          <i data-lucide="paperclip"></i>
+          <a href="#" onclick="openAttachment('${a.Id.replace(/'/g, "\\'")}', '${a.DisplayName.replace(/'/g, "\\'")}'); return false;">${a.DisplayName}</a>
+          <button class="icon-action-btn" onclick="downloadAttachment('${a.Id.replace(/'/g, "\\'")}', '${a.DisplayName.replace(/'/g, "\\'")}')"><i data-lucide="download" style="width:14px; height:14px;"></i></button>
+          ${canDelete ? `<button class="icon-action-btn icon-action-danger" onclick="deleteAttachment('${a.Id.replace(/'/g, "\\'")}', '${a.DisplayName.replace(/'/g, "\\'")}')"><i data-lucide="trash-2" style="width:14px; height:14px;"></i></button>` : ''}
+        </div>`).join('');
+      if (window.lucide) lucide.createIcons();
+    } catch(e) {
+      list.innerHTML = '<p class="attachments-empty">Villa við að sækja viðhengi.</p>';
+      console.error(e);
+    }
+  }
+
+  async function adminUploadFiles(fileList) {
+    const files = Array.from(fileList);
+    document.getElementById('adminFileInput').value = '';
+    for (const file of files) {
+      try {
+        const base64 = await fileToBase64(file);
+        await fetch(FLOW_BAETA_VID_VIDHENGI, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ TilkynningID: currentCommentsTilkynningId, FileName: file.name, FileContent: base64 })
+        });
+      } catch(e) {
+        notify('dashNotify', `Villa við að hlaða upp ${file.name}.`, 'error');
         console.error(e);
       }
-    }, 300);
-  }
-
-  function renderAutocomplete(items) {
-    const list = document.getElementById('autocompleteList');
-    if (!items.length) {
-      list.classList.remove('active');
-      return;
     }
-
-    items.sort((a, b) => {
-      const aEol = (a.Vara || '').includes('#');
-      const bEol = (b.Vara || '').includes('#');
-      if (aEol && !bEol) return 1;
-      if (!aEol && bEol) return -1;
-      return 0;
-    });
-
-    list.innerHTML = items.map((item, idx) => {
-      const isEol = (item.Vara || '').includes('#');
-      return `<div class="autocomplete-item${isEol ? ' eol' : ''}" data-idx="${idx}">
-        ${item.Title} <span>${item.Vara || ''}${isEol ? ' <i data-lucide="triangle-alert" style="width:12px; height:12px; color:#F4B740; vertical-align:-2px;"></i>' : ''}</span>
-      </div>`;
-    }).join('');
-
-    window._autocompleteItems = items;
-
-    list.querySelectorAll('.autocomplete-item').forEach(el => {
-      el.addEventListener('mousedown', (e) => {
-        e.preventDefault();
-        const idx = parseInt(el.dataset.idx);
-        const item = window._autocompleteItems[idx];
-        selectProduct(item.Title, item.Vara || '');
-      });
-    });
-
-    list.classList.add('active');
-    if (window.lucide) lucide.createIcons();
+    loadAttachments();
+    delete attachmentCountCache[currentCommentsTilkynningId];
+    loadAttachmentCountsForPage([{ ID: currentCommentsTilkynningId }]);
   }
-
-  function selectProduct(vorunumer, vara) {
-    selectedVorunumer = vorunumer;
-    selectedVara = vara;
-    document.getElementById('vorunumer').value = vorunumer;
-    document.getElementById('varaDesc').textContent = vara;
-    document.getElementById('autocompleteList').classList.remove('active');
-  }
-
-  document.addEventListener('click', (e) => {
-    if (!e.target.closest('.autocomplete-wrapper')) {
-      document.getElementById('autocompleteList').classList.remove('active');
-    }
-  });
-
-  let selectedFiles = [];
-
-  function handleFilesChange(fileList) {
-    Array.from(fileList).forEach(f => {
-      const exists = selectedFiles.some(sf => sf.name === f.name && sf.size === f.size);
-      if (!exists) selectedFiles.push(f);
-    });
-    document.getElementById('vidhengi').value = '';
-    renderFileList();
-  }
-
-  function removeFile(index) {
-    selectedFiles.splice(index, 1);
-    renderFileList();
-  }
-
-  function renderFileList() {
-    const container = document.getElementById('fileList');
-    if (!selectedFiles.length) { container.innerHTML = ''; return; }
-    container.innerHTML = selectedFiles.map((f, i) => `
-      <div class="file-chip">
-        <i data-lucide="file-check-2"></i>
-        <span class="file-chip-name">${f.name}</span>
-        <button type="button" class="dropzone-remove" onclick="event.stopPropagation(); removeFile(${i});"><i data-lucide="x"></i></button>
-      </div>`).join('');
-    if (window.lucide) lucide.createIcons();
-  }
-
-  (function setupDropzone() {
-    const zone = document.getElementById('dropzone');
-    const input = document.getElementById('vidhengi');
-    if (!zone || !input) return;
-    ['dragenter', 'dragover'].forEach(evt => {
-      zone.addEventListener(evt, e => { e.preventDefault(); zone.classList.add('dragover'); });
-    });
-    ['dragleave', 'drop'].forEach(evt => {
-      zone.addEventListener(evt, e => { e.preventDefault(); zone.classList.remove('dragover'); });
-    });
-    zone.addEventListener('drop', e => {
-      if (e.dataTransfer.files.length) handleFilesChange(e.dataTransfer.files);
-    });
-  })();
 
   function fileToBase64(file) {
     return new Promise((resolve, reject) => {
@@ -451,76 +780,1232 @@
     });
   }
 
-  async function submitReport() {
-    const lysing = document.getElementById('lysing').value.trim();
-    const tilkynnir = document.getElementById('tilkynnir').value.trim();
+  function guessMimeType(fileName) {
+    const ext = (fileName.split('.').pop() || '').toLowerCase();
+    if (ext === 'jpg' || ext === 'jpeg') return 'image/jpeg';
+    if (ext === 'png') return 'image/png';
+    if (ext === 'pdf') return 'application/pdf';
+    return 'application/octet-stream';
+  }
 
-    if (!selectedVorunumer) { notify('Veldu vöru úr listanum.', 'error'); return; }
-    if (!lysing) { notify('Skrifaðu nánari lýsingu.', 'error'); return; }
-    if (!tilkynnir) { notify('Skráðu nafn tilkynnanda.', 'error'); return; }
+  function base64ToBlob(base64, mimeType) {
+    const byteChars = atob(base64);
+    const byteNumbers = new Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
+    const byteArray = new Uint8Array(byteNumbers);
+    return new Blob([byteArray], { type: mimeType });
+  }
 
+  async function openAttachment(id, displayName) {
     try {
-      const res = await fetch(FLOW_SUBMIT, {
+      const res = await fetch(FLOW_VIDHENGI_INNIHALD, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          Verslun: selectedStore,
-          Vorunumer: selectedVorunumer,
-          Vara: selectedVara,
-          Astæda: selectedAstaeda,
-          Lysing: lysing,
-          Tilkynnir: tilkynnir
-        })
+        body: JSON.stringify({ TilkynningID: currentCommentsTilkynningId, FileName: id })
       });
       const data = await res.json();
-      const newId = data?.ID;
-
-      if (selectedFiles.length && newId) {
-        const failed = [];
-        for (const file of selectedFiles) {
-          try {
-            const base64 = await fileToBase64(file);
-            await fetch(FLOW_BAETA_VID_VIDHENGI, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ TilkynningID: newId, FileName: file.name, FileContent: base64 })
-            });
-          } catch(fileErr) {
-            console.error('Villa við að hlaða upp viðhengi', file.name, fileErr);
-            failed.push(file.name);
-          }
-        }
-        if (failed.length) {
-          notify(`Tilkynning send, en ${failed.length} viðhengi tókust ekki: ${failed.join(', ')}`, 'error');
-          resetForm();
-          return;
-        }
-      }
-
-      notify('Tilkynning send!', 'success');
-      resetForm();
+      const base64 = data.FileContent;
+      if (!base64) { notify('dashNotify', 'Ekki tókst að sækja viðhengi.', 'error'); return; }
+      const mime = guessMimeType(displayName || id);
+      const blob = base64ToBlob(base64, mime);
+      const url = URL.createObjectURL(blob);
+      showPreview(url, mime, displayName || id);
     } catch(e) {
-      notify('Villa við að senda tilkynningu. Reyndu aftur.', 'error');
+      notify('dashNotify', 'Villa við að sækja viðhengi.', 'error');
       console.error(e);
     }
   }
 
-  function resetForm() {
-    document.getElementById('vorunumer').value = '';
-    document.getElementById('varaDesc').textContent = '';
-    document.getElementById('lysing').value = '';
-    document.getElementById('tilkynnir').value = '';
-    document.getElementById('vidhengi').value = '';
-    selectedFiles = [];
-    renderFileList();
-    selectedVorunumer = '';
-    selectedVara = '';
-    selectedAstaeda = '';
-    selectedStore = '';
-    document.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('active'));
-    goStep(1);
+  function showPreview(url, mime, displayName) {
+    const content = document.getElementById('previewContent');
+    if (mime === 'application/pdf') {
+      content.innerHTML = `<iframe src="${url}"></iframe>`;
+    } else if (mime.startsWith('image/')) {
+      content.innerHTML = `<img src="${url}" onclick="this.classList.toggle('zoomed')" title="Smelltu til að stækka/minnka">`;
+    } else {
+      content.innerHTML = `<div class="preview-fallback">Get ekki forskoðað þessa skráartegund.<br><a href="${url}" download="${displayName}">Sækja skrá</a></div>`;
+    }
+    document.getElementById('previewOverlay').classList.add('active');
+    if (window.lucide) lucide.createIcons();
   }
-</script>
 
+  function closePreview() {
+    document.getElementById('previewOverlay').classList.remove('active');
+    document.getElementById('previewContent').innerHTML = '';
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closePreview();
+  });
+
+  async function downloadAttachment(id, displayName) {
+    try {
+      const res = await fetch(FLOW_VIDHENGI_INNIHALD, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ TilkynningID: currentCommentsTilkynningId, FileName: id })
+      });
+      const data = await res.json();
+      const base64 = data.FileContent;
+      if (!base64) { notify('dashNotify', 'Ekki tókst að sækja viðhengi.', 'error'); return; }
+      const blob = base64ToBlob(base64, guessMimeType(displayName || id));
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = displayName || 'vidhengi';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+    } catch(e) {
+      notify('dashNotify', 'Villa við að sækja viðhengi.', 'error');
+      console.error(e);
+    }
+  }
+
+  async function deleteAttachment(id, displayName) {
+    if (!confirm(`Eyða viðhenginu „${displayName}"? Þetta er óafturkræft.`)) return;
+    try {
+      await fetch(FLOW_EYDA_VIDHENGI, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ TilkynningID: currentCommentsTilkynningId, FileName: id })
+      });
+      notify('dashNotify', 'Viðhengi eytt.', 'success');
+      loadAttachments();
+      delete attachmentCountCache[currentCommentsTilkynningId];
+      loadAttachmentCountsForPage([{ ID: currentCommentsTilkynningId }]);
+    } catch(e) {
+      notify('dashNotify', 'Villa við að eyða viðhengi.', 'error');
+      console.error(e);
+    }
+  }
+
+  function formatCommentDate(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    const hh = String(d.getHours()).padStart(2, '0');
+    const min = String(d.getMinutes()).padStart(2, '0');
+    return `${dd}.${mm}.${yyyy} ${hh}:${min}`;
+  }
+
+  async function loadComments() {
+    const list = document.getElementById('commentsList');
+    try {
+      const all = await fetchAthugasemdirRaw(false);
+      const items = all.filter(c => Number(c.TilkynningID) === Number(currentCommentsTilkynningId));
+
+      if (!items.length) {
+        list.innerHTML = '<p class="comments-empty">Engar athugasemdir ennþá.</p>';
+        return;
+      }
+
+      const role = currentUser?.Hlutverk?.Value || currentUser?.Hlutverk || '';
+      const myEmail = currentUser?.Title || '';
+
+      list.innerHTML = items.map(c => {
+        const isDeleted = c.Eytt === true || c.Eytt === 'Yes' || c.Eytt === 1;
+        const canEdit = !isDeleted && (role === 'Master' || c.Hofundur === myEmail);
+        const wasEdited = !isDeleted && c.SidastBreyttAf;
+
+        if (isDeleted) {
+          return `
+          <div class="comment-item" id="comment-${c.ID}" style="opacity:0.6;">
+            <div class="meta"><strong>${c.Hofundur || 'Óþekkt'}</strong><span>${formatCommentDate(c.Dagsetning || c.Created)}</span></div>
+            <div class="text" style="font-style:italic; color:var(--text-muted);">Athugasemd eytt af ${c.EyttAf || 'Óþekkt'} — ${formatCommentDate(c.EyttDags)}</div>
+          </div>`;
+        }
+
+        const safeText = (c.Texti || '').replace(/</g, '&lt;');
+        return `
+        <div class="comment-item" id="comment-${c.ID}">
+          <div class="meta">
+            <strong>${c.Hofundur || 'Óþekkt'}</strong>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span title="${wasEdited ? 'Breytt af ' + c.SidastBreyttAf + ' — ' + formatCommentDate(c.SidastBreytt) : ''}">${formatCommentDate(c.Dagsetning || c.Created)}${wasEdited ? ' (breytt)' : ''}</span>
+              ${canEdit ? `
+              <div class="comment-actions">
+                <button title="Breyta" onclick="startEditComment(${c.ID})"><i data-lucide="pencil" style="width:12px; height:12px;"></i></button>
+                <button title="Eyða" onclick="deleteComment(${c.ID})"><i data-lucide="trash-2" style="width:12px; height:12px;"></i></button>
+              </div>` : ''}
+            </div>
+          </div>
+          <div class="text" id="commentText-${c.ID}">${safeText}</div>
+        </div>`;
+      }).join('');
+      list.scrollTop = list.scrollHeight;
+      if (window.lucide) lucide.createIcons();
+    } catch(e) {
+      list.innerHTML = '<p class="comments-empty">Villa við að sækja athugasemdir.</p>';
+      console.error(e);
+    }
+  }
+
+  function startEditComment(id) {
+    const all = athugasemdirRawCache || [];
+    const c = all.find(x => Number(x.ID) === Number(id));
+    if (!c) return;
+    const textEl = document.getElementById('commentText-' + id);
+    if (!textEl) return;
+    const original = c.Texti || '';
+    textEl.outerHTML = `
+      <div class="comment-edit-form" id="commentText-${id}">
+        <textarea id="editCommentInput-${id}">${original}</textarea>
+        <div class="comment-edit-actions">
+          <button class="elko-btn elko-btn-secondary elko-btn-sm" onclick="cancelEditComment(${id})">Hætta við</button>
+          <button class="elko-btn elko-btn-sm" onclick="saveCommentEdit(${id})">Vista</button>
+        </div>
+      </div>`;
+  }
+
+  function cancelEditComment(id) {
+    const all = athugasemdirRawCache || [];
+    const c = all.find(x => Number(x.ID) === Number(id));
+    const original = c ? (c.Texti || '') : '';
+    const el = document.getElementById('commentText-' + id);
+    if (!el) return;
+    el.outerHTML = `<div class="text" id="commentText-${id}">${original.replace(/</g, '&lt;')}</div>`;
+  }
+
+  async function saveCommentEdit(id) {
+    const input = document.getElementById('editCommentInput-' + id);
+    if (!input) return;
+    const newText = input.value.trim();
+    if (!newText) return;
+    try {
+      await fetch(FLOW_UPPFAERA_ATHUGASEMD, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ID: id, Texti: newText, BreyttAf: currentUser?.Title || '' })
+      });
+      await fetchAthugasemdirRaw(true);
+      loadComments();
+      renderTilkynningar(window._tilkynningarBaseItems || []);
+    } catch(e) {
+      notify('dashNotify', 'Villa við að vista breytingu.', 'error');
+      console.error(e);
+    }
+  }
+
+  async function deleteComment(id) {
+    if (!confirm('Eyða þessari athugasemd? Hún verður merkt eydd og felld úr sýn, en ummerki haldast í sögunni.')) return;
+    try {
+      await fetch(FLOW_EYDA_ATHUGASEMD, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ID: id, EyttAf: currentUser?.Title || '' })
+      });
+      await fetchAthugasemdirRaw(true);
+      loadComments();
+      renderTilkynningar(window._tilkynningarBaseItems || []);
+    } catch(e) {
+      notify('dashNotify', 'Villa við að eyða athugasemd.', 'error');
+      console.error(e);
+    }
+  }
+
+  async function submitComment() {
+    const textEl = document.getElementById('newCommentText');
+    const texti = textEl.value.trim();
+    if (!texti) return;
+    if (!currentCommentsTilkynningId) return;
+
+    const hofundur = currentUser?.Title || 'Óþekkt';
+
+    try {
+      await fetch(FLOW_SENDA_ATHUGASEMD, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ TilkynningID: currentCommentsTilkynningId, Texti: texti, Hofundur: hofundur })
+      });
+      textEl.value = '';
+      await fetchAthugasemdirRaw(true);
+      loadComments();
+      renderTilkynningar(window._tilkynningarBaseItems || []);
+    } catch(e) {
+      notify('dashNotify', 'Villa við að senda athugasemd.', 'error');
+      console.error(e);
+    }
+  }
+
+  function getTkField(r, key) {
+    switch (key) {
+      case 'tilvisun': return r.Title || '';
+      case 'verslun': return r.Verslun || '';
+      case 'vorunumer': return r.V_x00f6_run_x00fa_mer || r.Vorunumer || '';
+      case 'vara': return r.Vara || '';
+      case 'astaeda': return r.OData__x00c1_st_x00e6__x00f0_a?.Value || r.Astæda || '';
+      case 'lysing': return r.L_x00fd_sing || r.Lysing || '';
+      case 'tilkynnir': return r.Tilkynnir || '';
+      case 'dagsetning': return r.Dagsetning || '';
+      case 'stada': return r.Sta_x00f0_a?.Value || r.Sta_x00f0_a || '';
+      case 'breytt': return r.StadaDagsetning || '';
+      default: return '';
+    }
+  }
+
+  function sortTilkynningarBy(key) {
+    if (tilkynningarSort.key === key) {
+      tilkynningarSort.dir *= -1;
+    } else {
+      tilkynningarSort = { key, dir: 1 };
+    }
+    tilkynningarPage = 1;
+    renderTilkynningar(window._tilkynningarBaseItems || []);
+    updateSortArrows();
+  }
+
+  function setColumnFilter(key, value) {
+    tilkynningarColumnFilters[key] = value.trim().toLowerCase();
+    tilkynningarPage = 1;
+    renderTilkynningar(window._tilkynningarBaseItems || []);
+  }
+
+  function updateSortArrows() {
+    ['tilvisun','verslun','vorunumer','vara','astaeda','lysing','tilkynnir','dagsetning','stada','breytt'].forEach(key => {
+      const el = document.getElementById('sortArrow-' + key);
+      if (!el) return;
+      el.textContent = tilkynningarSort.key === key ? (tilkynningarSort.dir === 1 ? '▲' : '▼') : '';
+    });
+  }
+
+  async function hashPassword(password) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    const hash = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  function notify(panelId, msg, type) {
+    const el = document.getElementById(panelId);
+    el.textContent = msg;
+    el.className = 'elko-notify ' + type;
+    setTimeout(() => el.className = 'elko-notify', 4000);
+  }
+
+  function saveSession() {
+    sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+  }
+
+  function restoreSession() {
+    const saved = sessionStorage.getItem('currentUser');
+    if (saved) {
+      currentUser = JSON.parse(saved);
+      showDashboard();
+    }
+  }
+
+  async function login() {
+    const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+    const password = document.getElementById('loginPassword').value;
+    if (!email || !password) { notify('loginNotify', 'Fylltu inn netfang og lykilorð.', 'error'); return; }
+
+    try {
+      const res = await fetch(FLOW_NOTANDI, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ Notandi: email })
+      });
+      const user = await res.json();
+      if (!user || !user.Title) { notify('loginNotify', 'Notandi ekki fundinn.', 'error'); return; }
+      if (!user.LykilordSett) {
+        pendingEmail = email;
+        document.getElementById('loginPanel').style.display = 'none';
+        document.getElementById('setPasswordPanel').style.display = 'block';
+        return;
+      }
+      const hash = await hashPassword(password);
+      if (hash !== user.Lykilord) { notify('loginNotify', 'Rangt lykilorð.', 'error'); return; }
+      currentUser = user;
+      saveSession();
+      showDashboard();
+    } catch(e) {
+      notify('loginNotify', 'Villa við innskráningu. Reyndu aftur.', 'error');
+      console.error(e);
+    }
+  }
+
+  async function setPassword() {
+    const p1 = document.getElementById('newPassword1').value;
+    const p2 = document.getElementById('newPassword2').value;
+    if (!p1 || !p2) { notify('setPasswordNotify', 'Fylltu inn lykilorð.', 'error'); return; }
+    if (p1 !== p2) { notify('setPasswordNotify', 'Lykilorðin eru ekki eins.', 'error'); return; }
+    if (p1.length < 8) { notify('setPasswordNotify', 'Lykilorð verður að vera að minnsta kosti 8 stafir.', 'error'); return; }
+    try {
+      const hash = await hashPassword(p1);
+      await fetch(FLOW_LYKILORD, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ Notandi: pendingEmail, Lykilord: hash })
+      });
+      const res = await fetch(FLOW_NOTANDI, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ Notandi: pendingEmail })
+      });
+      currentUser = await res.json();
+      saveSession();
+      document.getElementById('setPasswordPanel').style.display = 'none';
+      showDashboard();
+    } catch(e) {
+      notify('setPasswordNotify', 'Villa við að vista lykilorð.', 'error');
+      console.error(e);
+    }
+  }
+
+  function logout() {
+    currentUser = null;
+    sessionStorage.removeItem('currentUser');
+    pendingEmail = null;
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('loginPanel').style.display = 'block';
+    document.getElementById('headerUser').style.display = 'none';
+    document.getElementById('loginEmail').value = '';
+    document.getElementById('loginPassword').value = '';
+  }
+
+  function showLogin() {
+    document.getElementById('loginPanel').style.display = 'block';
+    document.getElementById('forgotPanel').style.display = 'none';
+    document.getElementById('resetCodePanel').style.display = 'none';
+  }
+
+  function showForgot() {
+    document.getElementById('loginPanel').style.display = 'none';
+    document.getElementById('forgotPanel').style.display = 'block';
+  }
+
+  function showDashboard() {
+    document.getElementById('loginPanel').style.display = 'none';
+    document.getElementById('setPasswordPanel').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    document.getElementById('headerUser').style.display = 'flex';
+    document.getElementById('headerUserName').textContent = currentUser.Title;
+    document.getElementById('headerUserRole').textContent = currentUser.Hlutverk?.Value || currentUser.Hlutverk || '';
+    document.getElementById('headerAvatar').textContent = (currentUser.Title || '?').slice(0, 2).toUpperCase();
+    buildDashboard();
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function buildDashboard() {
+    const role = currentUser?.Hlutverk?.Value || currentUser?.Hlutverk || '';
+    const tabBar = document.getElementById('tabBar');
+    const panelContainer = document.getElementById('panelContainer');
+    tabBar.innerHTML = '';
+    panelContainer.innerHTML = '';
+
+    const tabs = [];
+    tabs.push({ id: 'tilkynningar', label: 'Tilkynningar' });
+    if (['Verslunarstjóri', 'Lagerstjóri', 'Skrifstofa', 'Master'].includes(role)) tabs.push({ id: 'stats', label: 'Tölfræði' });
+    if (role === 'Master') tabs.push({ id: 'notendur', label: 'Notendur' });
+
+    tabs.forEach((tab, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'elko-tab' + (i === 0 ? ' active' : '');
+      btn.textContent = tab.label;
+      btn.onclick = () => switchTab(tab.id, btn);
+      tabBar.appendChild(btn);
+      const panel = document.createElement('div');
+      panel.className = 'elko-panel' + (i === 0 ? ' active' : '');
+      panel.id = 'panel-' + tab.id;
+      panelContainer.appendChild(panel);
+    });
+
+    loadTilkynningar();
+  }
+
+  function switchTab(tab, btn) {
+    document.querySelectorAll('.elko-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.elko-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + tab).classList.add('active');
+    if (tab === 'tilkynningar') loadTilkynningar(true, true);
+    if (tab === 'stats') loadStats();
+    if (tab === 'notendur') loadNotendur();
+  }
+
+  function getVidList(vidbotar) {
+    if (!vidbotar) return [];
+    if (Array.isArray(vidbotar)) return vidbotar.map(v => v.Value || v);
+    return [vidbotar];
+  }
+
+  async function loadTilkynningar(resetPage = true, silent = false, forceRefresh = false) {
+    if (!currentUser) return;
+    const panel = document.getElementById('panel-tilkynningar');
+    const skeletonExists = !!document.getElementById('tilkynningarBody');
+
+    if (!silent || !skeletonExists) {
+      panel.innerHTML = '<p style="padding:20px;">Hleður tilkynningar...</p>';
+    } else {
+      showSync();
+    }
+
+    try {
+      let items = await fetchTilkynningarRaw(forceRefresh);
+      await fetchAthugasemdirRaw(forceRefresh);
+
+      const role = currentUser?.Hlutverk?.Value || currentUser?.Hlutverk || '';
+      const verslun = currentUser?.Verslun || '';
+      const vidbotar = currentUser?.Vi_x00f0_b_x00f3_tarVerslun || '';
+
+      if (role === 'Verslunarstjóri') {
+        const vidList = getVidList(vidbotar);
+        items = items.filter(i => i.Verslun === verslun || vidList.includes(i.Verslun));
+      } else if (role === 'Lagerstjóri') {
+        items = items.filter(i => i.Verslun === verslun);
+      } else {
+        items = [...items];
+      }
+
+      items.sort((a, b) => {
+        const dateA = a.Dagsetning || a.Title || '';
+        const dateB = b.Dagsetning || b.Title || '';
+        return dateB.localeCompare(dateA);
+      });
+
+      const nyCount = items.filter(i => (i.Sta_x00f0_a?.Value || i.Sta_x00f0_a) === 'Ný').length;
+      const ivinnCount = items.filter(i => (i.Sta_x00f0_a?.Value || i.Sta_x00f0_a) === 'Í vinnslu').length;
+      const lokidCount = items.filter(i => (i.Sta_x00f0_a?.Value || i.Sta_x00f0_a) === 'Lokið').length;
+
+      if (silent && skeletonExists) {
+        const nyEl = document.getElementById('countNy');
+        const ivinnEl = document.getElementById('countIvinnslu');
+        const lokidEl = document.getElementById('countLokid');
+        if (nyEl) nyEl.textContent = 'Ný: ' + nyCount;
+        if (ivinnEl) ivinnEl.textContent = 'Í vinnslu: ' + ivinnCount;
+        if (lokidEl) lokidEl.textContent = 'Lokið: ' + lokidCount;
+      } else {
+        tilkynningarColumnFilters = {};
+        tilkynningarSort = { key: null, dir: 1 };
+        panel.innerHTML = `
+          <div class="elko-filters">
+            <select id="filterVerslun" onchange="filterTilkynningar()">
+              <option value="">Allar verslanir</option>
+              <option>ELKO Lindir</option>
+              <option>ELKO Smáralind</option>
+              <option>ELKO Skeifan</option>
+              <option>ELKO Grandi</option>
+              <option>ELKO Akureyri</option>
+              <option>ELKO Flugstöð</option>
+            </select>
+            <select id="filterStada" onchange="filterTilkynningar()">
+              <option value="">Allar stöður</option>
+              <option>Ný</option>
+              <option>Í vinnslu</option>
+              <option>Lokið</option>
+            </select>
+            <select id="filterAstæda" onchange="filterTilkynningar()">
+              <option value="">Allar ástæður</option>
+              <option>Gallað</option>
+              <option>Ósöluhæft</option>
+              <option>Þjófnaður</option>
+              <option>Lagerleiðrétting</option>
+            </select>
+            <button class="elko-btn elko-btn-secondary elko-btn-sm" onclick="loadTilkynningar(true, true, true)"><i data-lucide="refresh-cw" style="width:14px; height:14px;"></i> Uppfæra</button>
+          </div>
+          <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
+            <div style="background:var(--badge-info-bg); border-radius:var(--radius-btn); padding:8px 16px; font-size:13px; font-weight:600; color:var(--badge-info-text); display:flex; align-items:center; gap:8px;"><span style="width:8px; height:8px; border-radius:50%; background:#2D9CDB; display:inline-block;"></span><span id="countNy">Ný: ${nyCount}</span></div>
+            <div style="background:var(--badge-warning-bg); border-radius:var(--radius-btn); padding:8px 16px; font-size:13px; font-weight:600; color:var(--badge-warning-text); display:flex; align-items:center; gap:8px;"><span style="width:8px; height:8px; border-radius:50%; background:#F4B740; display:inline-block;"></span><span id="countIvinnslu">Í vinnslu: ${ivinnCount}</span></div>
+            <div style="background:var(--badge-success-bg); border-radius:var(--radius-btn); padding:8px 16px; font-size:13px; font-weight:600; color:var(--badge-success-text); display:flex; align-items:center; gap:8px;"><span style="width:8px; height:8px; border-radius:50%; background:#38B24A; display:inline-block;"></span><span id="countLokid">Lokið: ${lokidCount}</span></div>
+          </div>
+          <div class="elko-table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th class="sortable-th" onclick="sortTilkynningarBy('tilvisun')">Tilvísun <span class="sort-arrow" id="sortArrow-tilvisun"></span></th>
+                  <th class="sortable-th" onclick="sortTilkynningarBy('verslun')">Verslun <span class="sort-arrow" id="sortArrow-verslun"></span></th>
+                  <th class="sortable-th" onclick="sortTilkynningarBy('vorunumer')">Vörunúmer <span class="sort-arrow" id="sortArrow-vorunumer"></span></th>
+                  <th class="sortable-th" onclick="sortTilkynningarBy('vara')">Vara <span class="sort-arrow" id="sortArrow-vara"></span></th>
+                  <th class="sortable-th" onclick="sortTilkynningarBy('astaeda')">Ástæða <span class="sort-arrow" id="sortArrow-astaeda"></span></th>
+                  <th class="sortable-th" onclick="sortTilkynningarBy('lysing')">Lýsing <span class="sort-arrow" id="sortArrow-lysing"></span></th>
+                  <th class="sortable-th" onclick="sortTilkynningarBy('tilkynnir')">Tilkynnir <span class="sort-arrow" id="sortArrow-tilkynnir"></span></th>
+                  <th class="sortable-th" onclick="sortTilkynningarBy('dagsetning')">Dagsetning <span class="sort-arrow" id="sortArrow-dagsetning"></span></th>
+                  <th class="sortable-th" onclick="sortTilkynningarBy('stada')">Staða <span class="sort-arrow" id="sortArrow-stada"></span></th>
+                  <th class="sortable-th" onclick="sortTilkynningarBy('breytt')">Breytt <span class="sort-arrow" id="sortArrow-breytt"></span></th>
+                  ${['Lagerstjóri', 'Master'].includes(role) ? '<th>Aðgerð</th>' : ''}
+                </tr>
+                <tr class="filter-row-th">
+                  <th><input class="col-filter-input" oninput="setColumnFilter('tilvisun', this.value)" placeholder="Sía..."></th>
+                  <th><input class="col-filter-input" oninput="setColumnFilter('verslun', this.value)" placeholder="Sía..."></th>
+                  <th><input class="col-filter-input" oninput="setColumnFilter('vorunumer', this.value)" placeholder="Sía..."></th>
+                  <th><input class="col-filter-input" oninput="setColumnFilter('vara', this.value)" placeholder="Sía..."></th>
+                  <th><input class="col-filter-input" oninput="setColumnFilter('astaeda', this.value)" placeholder="Sía..."></th>
+                  <th><input class="col-filter-input" oninput="setColumnFilter('lysing', this.value)" placeholder="Sía..."></th>
+                  <th><input class="col-filter-input" oninput="setColumnFilter('tilkynnir', this.value)" placeholder="Sía..."></th>
+                  <th><input class="col-filter-input" oninput="setColumnFilter('dagsetning', this.value)" placeholder="Sía..."></th>
+                  <th><input class="col-filter-input" oninput="setColumnFilter('stada', this.value)" placeholder="Sía..."></th>
+                  <th><input class="col-filter-input" oninput="setColumnFilter('breytt', this.value)" placeholder="Sía..."></th>
+                  ${['Lagerstjóri', 'Master'].includes(role) ? '<th></th>' : ''}
+                </tr>
+              </thead>
+              <tbody id="tilkynningarBody"></tbody>
+            </table>
+          </div>
+          <div id="tilkynningarPagination" style="display:flex; align-items:center; justify-content:space-between; margin-top:14px; font-size:13px; color:var(--text-secondary);"></div>`;
+      }
+
+      window._allTilkynningar = items;
+      if (resetPage) tilkynningarPage = 1;
+      renderRedFlags(items);
+      renderTilkynningar(items);
+      if (window.lucide) lucide.createIcons();
+      hideSync();
+
+    } catch(e) {
+      if (silent && skeletonExists) {
+        hideSync();
+        notify('dashNotify', 'Villa við að sækja tilkynningar.', 'error');
+      } else {
+        panel.innerHTML = '<p style="padding:20px; color:var(--danger, #E05353);">Villa við að sækja tilkynningar.</p>';
+      }
+      console.error(e);
+    }
+  }
+
+  function filterTilkynningar() {
+    const verslun = document.getElementById('filterVerslun').value;
+    const stada = document.getElementById('filterStada').value;
+    const astæda = document.getElementById('filterAstæda').value;
+
+    let items = window._allTilkynningar || [];
+    if (verslun) items = items.filter(i => i.Verslun === verslun);
+    if (stada) items = items.filter(i => i.Sta_x00f0_a?.Value === stada || i.Sta_x00f0_a === stada);
+    if (astæda) items = items.filter(i => i.OData__x00c1_st_x00e6__x00f0_a?.Value === astæda || i.Astæda === astæda);
+    tilkynningarPage = 1;
+    renderRedFlags(items);
+    renderTilkynningar(items);
+  }
+
+  function renderRedFlags(items) {
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
+    const recentItems = items.filter(i => (i.Dagsetning || '').split('T')[0] >= thirtyDaysAgo);
+
+    const counts = {};
+    recentItems.forEach(i => {
+      const v = i.V_x00f6_run_x00fa_mer || i.Vorunumer || '';
+      if (v) counts[v] = (counts[v] || 0) + 1;
+    });
+
+    const flagged = Object.entries(counts)
+      .filter(([, c]) => c >= 2)
+      .sort((a, b) => b[1] - a[1]);
+
+    const existing = document.getElementById('redFlagsSection');
+    if (existing) existing.remove();
+    if (!flagged.length) return;
+
+    const section = document.createElement('div');
+    section.id = 'redFlagsSection';
+    section.style.cssText = 'background:var(--card); border:1px solid var(--border); border-radius:var(--radius-card); padding:16px 20px; margin-bottom:16px; border-left:3px solid #E05353;';
+    section.innerHTML = `
+      <div style="font-weight:700; color:var(--badge-danger-text); margin-bottom:10px; font-size:14px; display:flex; align-items:center; gap:6px;"><i data-lucide="alert-triangle" style="width:16px; height:16px;"></i>Endurteknar tilkynningar <span style="font-weight:400; color:var(--text-muted); font-size:12px;">(síðustu 30 daga)</span></div>
+      <div style="display:flex; flex-wrap:wrap; gap:8px;">
+        ${flagged.map(([v, c]) => `
+          <span style="background:${c >= 3 ? 'var(--badge-danger-bg)' : 'var(--badge-warning-bg)'}; border:1px solid ${c >= 3 ? 'var(--badge-danger-text)' : 'var(--badge-warning-text)'}; border-radius:20px; padding:4px 12px; font-size:12px; font-weight:600; color:${c >= 3 ? 'var(--badge-danger-text)' : 'var(--badge-warning-text)'};">
+            ${v} — ${c} tilkynningar
+          </span>
+        `).join('')}
+      </div>`;
+
+    const tableWrap = document.querySelector('#panel-tilkynningar .elko-table-wrap');
+    tableWrap.parentNode.insertBefore(section, tableWrap);
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function renderTilkynningar(baseItems) {
+    const tbody = document.getElementById('tilkynningarBody');
+    const role = currentUser?.Hlutverk?.Value || currentUser?.Hlutverk || '';
+
+    window._tilkynningarBaseItems = baseItems;
+
+    let items = baseItems.filter(r => {
+      return Object.entries(tilkynningarColumnFilters).every(([key, q]) => {
+        if (!q) return true;
+        return getTkField(r, key).toLowerCase().includes(q);
+      });
+    });
+
+    if (tilkynningarSort.key) {
+      items = [...items].sort((a, b) => {
+        const av = getTkField(a, tilkynningarSort.key);
+        const bv = getTkField(b, tilkynningarSort.key);
+        return av.localeCompare(bv, 'is') * tilkynningarSort.dir;
+      });
+    }
+
+    window._currentTilkynningarItems = items;
+
+    if (!items.length) {
+      tbody.innerHTML = '<tr><td colspan="11">Engar tilkynningar fundust.</td></tr>';
+      renderTilkynningarPagination(0);
+      updateSortArrows();
+      return;
+    }
+
+    const totalPages = Math.max(1, Math.ceil(items.length / TILKYNNINGAR_PAGE_SIZE));
+    if (tilkynningarPage > totalPages) tilkynningarPage = totalPages;
+    const start = (tilkynningarPage - 1) * TILKYNNINGAR_PAGE_SIZE;
+    const pageItems = items.slice(start, start + TILKYNNINGAR_PAGE_SIZE);
+
+    tbody.innerHTML = pageItems.map(r => {
+      const stada = r.Sta_x00f0_a?.Value || r.Sta_x00f0_a || '';
+      const astæda = r.OData__x00c1_st_x00e6__x00f0_a?.Value || r.Astæda || '';
+      const dagur = r.Dagsetning?.split('T')[0] || '';
+      const breytt = r.StadaDagsetning?.split('T')[0] || '';
+      const vorunumer = r.V_x00f6_run_x00fa_mer || r.Vorunumer || '';
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
+      const count = window._allTilkynningar.filter(i =>
+        (i.V_x00f6_run_x00fa_mer || i.Vorunumer) === vorunumer &&
+        (i.Dagsetning || '').split('T')[0] >= thirtyDaysAgo
+      ).length;
+      const flag = count >= 3
+        ? ` <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#E05353; margin-left:4px; vertical-align:middle;"></span>`
+        : count >= 2
+        ? ` <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#F4B740; margin-left:4px; vertical-align:middle;"></span>`
+        : '';
+      const commentCount = athugasemdirRawCache.filter(c => Number(c.TilkynningID) === Number(r.ID) && !(c.Eytt === true || c.Eytt === 'Yes' || c.Eytt === 1)).length;
+      const commentBadge = commentCount > 0
+        ? ` <span style="display:inline-flex; align-items:center; gap:2px; font-size:11px; color:var(--text-muted); margin-left:6px;"><i data-lucide="message-circle" style="width:12px; height:12px;"></i>${commentCount}</span>`
+        : '';
+      return `<tr>
+        <td style="white-space:nowrap;"><a href="#" onclick="openCommentsById(${r.ID}); return false;" style="color:var(--elko-green); font-weight:600; text-decoration:none;">${r.Title || ''}</a>${commentBadge}<span id="attCount-${r.ID}"></span></td>
+        <td>${r.Verslun || ''}</td>
+        <td>${vorunumer}${flag}</td>
+        <td>${r.Vara || ''}</td>
+        <td>${astæda}</td>
+        <td style="max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${r.L_x00fd_sing || r.Lysing || ''}">${r.L_x00fd_sing || r.Lysing || ''}</td>
+        <td>${r.Tilkynnir || ''}</td>
+        <td>${dagur}</td>
+        <td><span class="stada-badge stada-${stada.replace(' ', '.')}">${stada}</span></td>
+        <td style="font-size:12px; color:var(--text-muted);" title="${r.BreyttAf ? 'Breytt af: ' + r.BreyttAf : ''}">${breytt}${r.BreyttAf ? ` <span style="color:var(--text-secondary);">(${r.BreyttAf})</span>` : ''}</td>
+        ${['Lagerstjóri', 'Master'].includes(role) ? `
+        <td>
+          <select onchange="updateStada(${r.ID}, this.value)" style="padding:5px 8px; border:1px solid var(--border); border-radius:8px; font-size:12px; font-family:inherit; background:var(--surface); color:var(--text-primary);">
+            <option value="">-- Breyta --</option>
+            <option value="Ný">Ný</option>
+            <option value="Í vinnslu">Í vinnslu</option>
+            <option value="Lokið">Lokið</option>
+          </select>
+        </td>` : ''}
+      </tr>`;
+    }).join('');
+
+    renderTilkynningarPagination(items.length);
+    loadAttachmentCountsForPage(pageItems);
+    updateSortArrows();
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function renderTilkynningarPagination(totalItems) {
+    const el = document.getElementById('tilkynningarPagination');
+    if (!el) return;
+
+    if (!totalItems) { el.innerHTML = ''; return; }
+
+    const totalPages = Math.max(1, Math.ceil(totalItems / TILKYNNINGAR_PAGE_SIZE));
+    const start = (tilkynningarPage - 1) * TILKYNNINGAR_PAGE_SIZE + 1;
+    const end = Math.min(tilkynningarPage * TILKYNNINGAR_PAGE_SIZE, totalItems);
+
+    el.innerHTML = `
+      <span>Sýni ${start}–${end} af ${totalItems}</span>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <button class="elko-btn elko-btn-secondary elko-btn-sm" ${tilkynningarPage <= 1 ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''} onclick="goToTilkynningarPage(${tilkynningarPage - 1})">
+          <i data-lucide="chevron-left" style="width:14px; height:14px;"></i> Fyrri
+        </button>
+        <span style="padding:0 6px; font-weight:600; color:var(--text-primary);">Síða ${tilkynningarPage} af ${totalPages}</span>
+        <button class="elko-btn elko-btn-secondary elko-btn-sm" ${tilkynningarPage >= totalPages ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''} onclick="goToTilkynningarPage(${tilkynningarPage + 1})">
+          Næsta <i data-lucide="chevron-right" style="width:14px; height:14px;"></i>
+        </button>
+      </div>`;
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function goToTilkynningarPage(n) {
+    tilkynningarPage = n;
+    renderTilkynningar(window._tilkynningarBaseItems || []);
+  }
+
+  async function updateStada(id, stada) {
+    if (!stada) return;
+    const breyttAf = currentUser?.Title || '';
+    try {
+      await fetch(FLOW_UPPFAERA_STODU, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ID: id, Stada: stada, BreyttAf: breyttAf })
+      });
+      notify('dashNotify', 'Staða uppfærð!', 'success');
+      loadTilkynningar(false, true, true);
+    } catch(e) {
+      notify('dashNotify', 'Villa við að uppfæra stöðu.', 'error');
+      console.error(e);
+    }
+  }
+
+  async function loadStats() {
+    if (!currentUser) return;
+    const panel = document.getElementById('panel-stats');
+    const hasContent = panel.querySelector('.stats-grid');
+    if (!hasContent) {
+      panel.innerHTML = '<p style="padding:20px;">Hleður tölfræði...</p>';
+    } else {
+      showSync();
+    }
+
+    try {
+      let items = await fetchTilkynningarRaw(false);
+
+      const role = currentUser?.Hlutverk?.Value || currentUser?.Hlutverk || '';
+      const verslun = currentUser?.Verslun || '';
+      const vidbotar = currentUser?.Vi_x00f0_b_x00f3_tarVerslun || '';
+
+      if (role === 'Verslunarstjóri') {
+        const vidList = getVidList(vidbotar);
+        items = items.filter(i => i.Verslun === verslun || vidList.includes(i.Verslun));
+      } else if (role === 'Lagerstjóri') {
+        items = items.filter(i => i.Verslun === verslun);
+      }
+
+      const now = new Date();
+      const today = now.toISOString().split('T')[0];
+      const toISO = d => d.toISOString().split('T')[0];
+
+      const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+      const lastMonthCutoffRaw = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+      const lastMonthCutoff = lastMonthCutoffRaw > endOfLastMonth ? endOfLastMonth : lastMonthCutoffRaw;
+
+      const startOfThisYear = new Date(now.getFullYear(), 0, 1);
+      const startOfLastYear = new Date(now.getFullYear() - 1, 0, 1);
+      const lastYearCutoff = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+
+      const countInRange = (from, to) => items.filter(i => {
+        const d = (i.Dagsetning || '').split('T')[0];
+        return d >= from && d <= to;
+      }).length;
+
+      const mtdThis = countInRange(toISO(startOfThisMonth), today);
+      const mtdLast = countInRange(toISO(startOfLastMonth), toISO(lastMonthCutoff));
+      const ytdThis = countInRange(toISO(startOfThisYear), today);
+      const ytdLast = countInRange(toISO(startOfLastYear), toISO(lastYearCutoff));
+      const allTimeCount = items.length;
+
+      const weekAgo = new Date(now - 7 * 86400000).toISOString().split('T')[0];
+      const countByDate = (from) => items.filter(i => (i.Dagsetning || '').split('T')[0] >= from).length;
+      const todayCount = items.filter(i => (i.Dagsetning || '').split('T')[0] === today).length;
+      const weekCount = countByDate(weekAgo);
+
+      const byAstæda = {};
+      items.forEach(i => {
+        const a = i.OData__x00c1_st_x00e6__x00f0_a?.Value || i.Astæda || 'Óþekkt';
+        byAstæda[a] = (byAstæda[a] || 0) + 1;
+      });
+
+      const byVerslun = {};
+      items.forEach(i => {
+        const v = i.Verslun || 'Óþekkt';
+        byVerslun[v] = (byVerslun[v] || 0) + 1;
+      });
+
+      const diff = (a, b) => b === 0 ? '' : ` <span style="font-size:11px; color:${a >= b ? 'var(--badge-success-text)' : 'var(--badge-danger-text)'}">${a >= b ? '▲' : '▼'} ${Math.abs(a - b)}</span>`;
+
+      const astaedaList = ['Þjófnaður', 'Gallað', 'Ósöluhæft', 'Lagerleiðrétting'];
+      const countByAstaedaInRange = (from, to) => {
+        const result = {};
+        astaedaList.forEach(a => result[a] = 0);
+        items.forEach(i => {
+          const d = (i.Dagsetning || '').split('T')[0];
+          const a = i.OData__x00c1_st_x00e6__x00f0_a?.Value || i.Astæda || '';
+          if (d >= from && d <= to && astaedaList.includes(a)) result[a]++;
+        });
+        return result;
+      };
+      const mtdThisByAstaeda = countByAstaedaInRange(toISO(startOfThisMonth), today);
+      const mtdLastByAstaeda = countByAstaedaInRange(toISO(startOfLastMonth), toISO(lastMonthCutoff));
+      const ytdThisByAstaeda = countByAstaedaInRange(toISO(startOfThisYear), today);
+      const ytdLastByAstaeda = countByAstaedaInRange(toISO(startOfLastYear), toISO(lastYearCutoff));
+
+      const verslunList = ['ELKO Lindir', 'ELKO Smáralind', 'ELKO Skeifan', 'ELKO Grandi', 'ELKO Akureyri', 'ELKO Flugstöð'];
+      const countByVerslunInRange = (from, to) => {
+        const result = {};
+        verslunList.forEach(v => result[v] = 0);
+        items.forEach(i => {
+          const d = (i.Dagsetning || '').split('T')[0];
+          const v = i.Verslun || '';
+          if (d >= from && d <= to && verslunList.includes(v)) result[v]++;
+        });
+        return result;
+      };
+      const mtdThisByVerslun = countByVerslunInRange(toISO(startOfThisMonth), today);
+      const mtdLastByVerslun = countByVerslunInRange(toISO(startOfLastMonth), toISO(lastMonthCutoff));
+      const ytdThisByVerslun = countByVerslunInRange(toISO(startOfThisYear), today);
+      const ytdLastByVerslun = countByVerslunInRange(toISO(startOfLastYear), toISO(lastYearCutoff));
+
+      panel.innerHTML = `
+        <h3 class="section-title"><i data-lucide="bar-chart-3"></i>Yfirlit</h3>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="number">${todayCount}</div><div class="label">Í dag</div></div>
+          <div class="stat-card"><div class="number">${weekCount}</div><div class="label">Síðustu 7 dagar</div></div>
+          <div class="stat-card"><div class="number">${mtdThis}${diff(mtdThis, mtdLast)}</div><div class="label">Þessi mánuður vs síðasti (${mtdLast})</div></div>
+          <div class="stat-card"><div class="number">${ytdThis}${diff(ytdThis, ytdLast)}</div><div class="label">Þetta ár vs í fyrra (${ytdLast})</div></div>
+          <div class="stat-card"><div class="number">${allTimeCount}</div><div class="label">Samtals tilkynningar</div></div>
+        </div>
+        <h3 class="section-title"><i data-lucide="list-tree"></i>Eftir ástæðu</h3>
+        <div class="subsection-label">MTD — það sem af er mánuði</div>
+        <div class="stats-grid">
+          ${astaedaList.map(a => `<div class="stat-card"><div class="number">${mtdThisByAstaeda[a]}${diff(mtdThisByAstaeda[a], mtdLastByAstaeda[a])}</div><div class="label">${a}</div></div>`).join('')}
+        </div>
+        <div class="subsection-label">YTD — það sem af er ári</div>
+        <div class="stats-grid">
+          ${astaedaList.map(a => `<div class="stat-card"><div class="number">${ytdThisByAstaeda[a]}${diff(ytdThisByAstaeda[a], ytdLastByAstaeda[a])}</div><div class="label">${a}</div></div>`).join('')}
+        </div>
+        <div class="subsection-label">Frá upphafi (alltime)</div>
+        <div class="stats-grid">
+          ${astaedaList.map(a => `<div class="stat-card"><div class="number">${byAstæda[a] || 0}</div><div class="label">${a}</div></div>`).join('')}
+        </div>
+        <h3 class="section-title"><i data-lucide="store"></i>Eftir verslun</h3>
+        <div class="subsection-label">MTD — það sem af er mánuði</div>
+        <div class="stats-grid">
+          ${verslunList.map(v => `<div class="stat-card"><div class="number">${mtdThisByVerslun[v]}${diff(mtdThisByVerslun[v], mtdLastByVerslun[v])}</div><div class="label">${v}</div></div>`).join('')}
+        </div>
+        <div class="subsection-label">YTD — það sem af er ári</div>
+        <div class="stats-grid">
+          ${verslunList.map(v => `<div class="stat-card"><div class="number">${ytdThisByVerslun[v]}${diff(ytdThisByVerslun[v], ytdLastByVerslun[v])}</div><div class="label">${v}</div></div>`).join('')}
+        </div>
+        <div class="subsection-label">Frá upphafi (alltime)</div>
+        <div class="stats-grid">
+          ${verslunList.map(v => `<div class="stat-card"><div class="number">${byVerslun[v] || 0}</div><div class="label">${v}</div></div>`).join('')}
+        </div>
+        <h3 class="section-title"><i data-lucide="trending-up"></i>Vaxandi vandamál</h3>
+        ${(() => {
+          const watchAstæður = ['Gallað', 'Þjófnaður'];
+          const thirtyDaysAgo = new Date(now - 30 * 86400000).toISOString().split('T')[0];
+
+          const recentItems = items.filter(i =>
+            (i.Dagsetning || '').split('T')[0] >= thirtyDaysAgo &&
+            watchAstæður.includes(i.OData__x00c1_st_x00e6__x00f0_a?.Value || i.Astæda || '')
+          );
+
+          const counts = {};
+          recentItems.forEach(i => {
+            const astæda = i.OData__x00c1_st_x00e6__x00f0_a?.Value || i.Astæda || '';
+            const key = (i.V_x00f6_run_x00fa_mer || i.Vorunumer || '') + '|' + (i.Vara || '') + '|' + astæda;
+            counts[key] = (counts[key] || 0) + 1;
+          });
+
+          const minFlagCount = 5;
+          const alerts = Object.entries(counts)
+            .map(([key, count]) => {
+              const [vorunumer, vara, astæda] = key.split('|');
+              return { vorunumer, vara, astæda, count };
+            })
+            .filter(x => x.count >= minFlagCount)
+            .sort((a, b) => b.count - a.count);
+
+          if (!alerts.length) return '<p style="color:var(--text-muted); font-size:13px; padding:8px 0;">Engin vaxandi vandamál fundust síðustu 30 daga.</p>';
+
+          return `<div style="display:flex; flex-direction:column; gap:8px;">
+            ${alerts.map(a => `
+              <div style="background:var(--card); border:1px solid var(--border); border-radius:var(--radius-card); padding:14px 16px; border-left:3px solid ${a.astæda === 'Þjófnaður' ? '#E05353' : '#F4B740'}; display:flex; align-items:center; justify-content:space-between;">
+                <div>
+                  <div style="font-weight:700; font-size:14px; color:var(--text-primary);">${a.vorunumer} — ${a.vara}</div>
+                  <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">${a.astæda}: ${a.count} tilkynningar síðustu 30 daga</div>
+                </div>
+                <div style="font-size:11px; font-weight:700; color:${a.astæda === 'Þjófnaður' ? 'var(--badge-danger-text)' : 'var(--badge-warning-text)'}; text-align:right; display:flex; align-items:center; gap:4px;">
+                  <i data-lucide="trending-up" style="width:14px; height:14px;"></i>Vaxandi
+                </div>
+              </div>
+            `).join('')}
+          </div>`;
+        })()}`;
+      if (window.lucide) lucide.createIcons();
+      hideSync();
+
+    } catch(e) {
+      if (hasContent) {
+        hideSync();
+        notify('dashNotify', 'Villa við að sækja tölfræði.', 'error');
+      } else {
+        panel.innerHTML = '<p style="padding:20px; color:var(--danger, #E05353);">Villa við að sækja tölfræði.</p>';
+      }
+      console.error(e);
+    }
+  }
+
+  async function loadNotendur() {
+    const panel = document.getElementById('panel-notendur');
+    const hasContent = panel.querySelector('.elko-table-wrap');
+    if (!hasContent) {
+      panel.innerHTML = '<p style="padding:20px;">Hleður notendur...</p>';
+    } else {
+      showSync();
+    }
+
+    try {
+      const res = await fetch(FLOW_NOTENDUR, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+      const data = await res.json();
+      const items = data.value || data;
+      window._allNotendur = items;
+
+      panel.innerHTML = `
+        <div class="elko-filters">
+          <button class="elko-btn elko-btn-sm" onclick="showNewUserForm()"><i data-lucide="user-plus" style="width:14px; height:14px;"></i> Nýr notandi</button>
+          <button class="elko-btn elko-btn-secondary elko-btn-sm" onclick="loadNotendur()"><i data-lucide="refresh-cw" style="width:14px; height:14px;"></i> Uppfæra</button>
+        </div>
+        <div id="newUserForm" style="display:none; background:var(--card); border:1px solid var(--border); padding:20px; border-radius:var(--radius-card); margin-bottom:20px;">
+          <h3 style="color:var(--text-primary); margin-bottom:16px; font-size:15px; font-weight:700;">Nýr notandi</h3>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+            <div class="elko-field"><label>Netfang *</label><input type="email" id="newUserEmail" placeholder="netfang@elko.is"></div>
+            <div class="elko-field"><label>Hlutverk *</label>
+              <select id="newUserHlutverk">
+                <option value="">-- Veldu hlutverk --</option>
+                <option value="Verslunarstjóri">Verslunarstjóri</option>
+                <option value="Lagerstjóri">Lagerstjóri</option>
+                <option value="Skrifstofa">Skrifstofa</option>
+                <option value="Master">Master</option>
+              </select>
+            </div>
+            <div class="elko-field"><label>Verslun</label>
+              <select id="newUserVerslun">
+                <option value="">-- Veldu verslun --</option>
+                <option>ELKO Lindir</option><option>ELKO Smáralind</option><option>ELKO Skeifan</option>
+                <option>ELKO Grandi</option><option>ELKO Akureyri</option><option>ELKO Flugstöð</option>
+              </select>
+            </div>
+            <div class="elko-field"><label>Viðbótarverslun</label>
+              <select id="newUserVidbotar">
+                <option value="">-- Engin --</option>
+                <option>ELKO Lindir</option><option>ELKO Smáralind</option><option>ELKO Skeifan</option>
+                <option>ELKO Grandi</option><option>ELKO Akureyri</option><option>ELKO Flugstöð</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-top:16px; display:flex; gap:10px;">
+            <button class="elko-btn" onclick="createUser()">Búa til notanda</button>
+            <button class="elko-btn elko-btn-secondary" onclick="document.getElementById('newUserForm').style.display='none'">Hætta við</button>
+          </div>
+        </div>
+        <div id="editUserForm" style="display:none; background:var(--card); border:1px solid var(--border); padding:20px; border-radius:var(--radius-card); margin-bottom:20px;">
+          <h3 style="color:var(--text-primary); margin-bottom:16px; font-size:15px; font-weight:700;">Breyta notanda: <span id="editUserEmail" style="color:var(--elko-green);"></span></h3>
+          <input type="hidden" id="editUserId">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+            <div class="elko-field"><label>Hlutverk *</label>
+              <select id="editUserHlutverk">
+                <option value="Verslunarstjóri">Verslunarstjóri</option>
+                <option value="Lagerstjóri">Lagerstjóri</option>
+                <option value="Skrifstofa">Skrifstofa</option>
+                <option value="Master">Master</option>
+              </select>
+            </div>
+            <div class="elko-field"><label>Verslun</label>
+              <select id="editUserVerslun">
+                <option value="">-- Engin --</option>
+                <option>ELKO Lindir</option><option>ELKO Smáralind</option><option>ELKO Skeifan</option>
+                <option>ELKO Grandi</option><option>ELKO Akureyri</option><option>ELKO Flugstöð</option>
+              </select>
+            </div>
+            <div class="elko-field"><label>Viðbótarverslanir</label>
+              <select id="editUserVidbotar" multiple style="height:130px;">
+                <option>ELKO Lindir</option><option>ELKO Smáralind</option><option>ELKO Skeifan</option>
+                <option>ELKO Grandi</option><option>ELKO Akureyri</option><option>ELKO Flugstöð</option>
+              </select>
+              <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Haltu Ctrl (eða Cmd) til að velja fleiri en eina</div>
+            </div>
+          </div>
+          <div style="margin-top:16px; display:flex; gap:10px;">
+            <button class="elko-btn" onclick="saveNotandi()">Vista breytingar</button>
+            <button class="elko-btn elko-btn-secondary" onclick="document.getElementById('editUserForm').style.display='none'">Hætta við</button>
+          </div>
+        </div>
+        <div class="elko-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Netfang</th><th>Hlutverk</th><th>Verslun</th><th>Viðbótarverslun</th><th>Lykilorð sett</th><th>Aðgerð</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${items.map(u => `<tr>
+                <td>${u.Title || ''}</td>
+                <td>${u.Hlutverk?.Value || u.Hlutverk || ''}</td>
+                <td>${u.Verslun || ''}</td>
+                <td>${(() => {
+                  const vidText = Array.isArray(u.Vi_x00f0_b_x00f3_tarVerslun)
+                    ? u.Vi_x00f0_b_x00f3_tarVerslun.map(v => v.Value || v).join(', ')
+                    : u.Vi_x00f0_b_x00f3_tarVerslun || '';
+                  return vidText ? `<span title="${vidText}" style="display:inline-block; max-width:150px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:help;">${vidText}</span>` : '';
+                })()}</td>
+                <td>${u.LykilordSett ? '<i data-lucide="check-circle-2" style="width:16px; height:16px; color:var(--elko-green);"></i>' : '<i data-lucide="circle" style="width:16px; height:16px; color:var(--text-muted);"></i>'}</td>
+                <td style="white-space:nowrap;">
+                  <div style="display:flex; gap:6px; align-items:center;">
+                    <button title="Breyta" onclick="editNotandi(${u.ID})" class="icon-action-btn"><i data-lucide="pencil" style="width:14px; height:14px;"></i></button>
+                    <button title="Endurstilla lykilorð" onclick="resetNotandi(${u.ID}, '${u.Title}')" class="icon-action-btn icon-action-warn"><i data-lucide="key" style="width:14px; height:14px;"></i></button>
+                    <button title="Eyða" onclick="eydaNotanda(${u.ID}, '${u.Title}')" class="icon-action-btn icon-action-danger"><i data-lucide="trash-2" style="width:14px; height:14px;"></i></button>
+                  </div>
+                </td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>`;
+      if (window.lucide) lucide.createIcons();
+      hideSync();
+
+    } catch(e) {
+      if (hasContent) {
+        hideSync();
+        notify('dashNotify', 'Villa við að sækja notendur.', 'error');
+      } else {
+        panel.innerHTML = '<p style="padding:20px; color:var(--danger, #E05353);">Villa við að sækja notendur.</p>';
+      }
+      console.error(e);
+    }
+  }
+
+  function showNewUserForm() { document.getElementById('newUserForm').style.display = 'block'; }
+
+  async function createUser() {
+    const email = document.getElementById('newUserEmail').value.trim().toLowerCase();
+    const hlutverk = document.getElementById('newUserHlutverk').value;
+    const verslun = document.getElementById('newUserVerslun').value;
+    if (!email || !hlutverk) { notify('dashNotify', 'Fylltu inn netfang og hlutverk.', 'error'); return; }
+    try {
+      const res = await fetch(FLOW_NYR_NOTANDI, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ Notandi: email, Hlutverk: hlutverk, Verslun: verslun })
+      });
+      const data = await res.json();
+      if (data.error) { notify('dashNotify', 'Notandi er nú þegar til.', 'error'); return; }
+      notify('dashNotify', 'Notandi búinn til!', 'success');
+      loadNotendur();
+    } catch(e) {
+      notify('dashNotify', 'Villa við að búa til notanda.', 'error');
+      console.error(e);
+    }
+  }
+
+  function editNotandi(id) {
+    const u = window._allNotendur.find(x => x.ID === id);
+    if (!u) return;
+    document.getElementById('editUserForm').style.display = 'block';
+    document.getElementById('editUserId').value = id;
+    document.getElementById('editUserEmail').textContent = u.Title;
+    document.getElementById('editUserHlutverk').value = u.Hlutverk?.Value || u.Hlutverk || '';
+    document.getElementById('editUserVerslun').value = u.Verslun || '';
+    const vidEl = document.getElementById('editUserVidbotar');
+    const vidArray = getVidList(u.Vi_x00f0_b_x00f3_tarVerslun);
+    Array.from(vidEl.options).forEach(o => o.selected = vidArray.includes(o.value));
+    document.getElementById('editUserForm').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  async function saveNotandi() {
+    const id = document.getElementById('editUserId').value;
+    const hlutverk = document.getElementById('editUserHlutverk').value;
+    const verslun = document.getElementById('editUserVerslun').value;
+    const vidbotar = Array.from(document.getElementById('editUserVidbotar').selectedOptions).map(o => ({ Value: o.value }));
+    try {
+      await fetch(FLOW_UPPFAERA_NOTANDA, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ID: id, Hlutverk: hlutverk, Verslun: verslun, Vidbotar: vidbotar })
+      });
+      notify('dashNotify', 'Notandi uppfærður!', 'success');
+      document.getElementById('editUserForm').style.display = 'none';
+      loadNotendur();
+    } catch(e) {
+      notify('dashNotify', 'Villa við að uppfæra notanda.', 'error');
+      console.error(e);
+    }
+  }
+
+  async function resetNotandi(id, email) {
+    if (!confirm(`Endurstilla lykilorð fyrir ${email}?`)) return;
+    try {
+      await fetch(FLOW_ENDURSTILLA_NOTANDA, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ID: id })
+      });
+      notify('dashNotify', `Lykilorð endurstillt fyrir ${email}.`, 'success');
+      loadNotendur();
+    } catch(e) {
+      notify('dashNotify', 'Villa við að endurstilla lykilorð.', 'error');
+      console.error(e);
+    }
+  }
+
+  async function eydaNotanda(id, email) {
+    if (!confirm(`Eyða notanda ${email}? Þetta er óafturkræft.`)) return;
+    try {
+      await fetch(FLOW_EYDA_NOTANDA, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ID: id })
+      });
+      notify('dashNotify', `Notanda ${email} hefur verið eytt.`, 'success');
+      loadNotendur();
+    } catch(e) {
+      notify('dashNotify', 'Villa við að eyða notanda.', 'error');
+      console.error(e);
+    }
+  }
+
+  async function sendResetCode() {
+    const email = document.getElementById('forgotEmail').value.trim().toLowerCase();
+    if (!email) { notify('forgotNotify', 'Sláðu inn netfang.', 'error'); return; }
+    try {
+      const res = await fetch(FLOW_RESET, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ Notandi: email })
+      });
+      const data = await res.json();
+      if (data.error) { notify('forgotNotify', 'Notandi ekki fundinn.', 'error'); return; }
+      pendingEmail = email;
+      document.getElementById('forgotPanel').style.display = 'none';
+      document.getElementById('resetCodePanel').style.display = 'block';
+    } catch(e) {
+      notify('forgotNotify', 'Villa við að senda kóða. Reyndu aftur.', 'error');
+      console.error(e);
+    }
+  }
+
+  async function confirmReset() {
+    const kodi = document.getElementById('resetCode').value.trim();
+    const p1 = document.getElementById('resetPassword1').value;
+    const p2 = document.getElementById('resetPassword2').value;
+    if (!kodi || !p1 || !p2) { notify('resetCodeNotify', 'Fylltu inn alla reiti.', 'error'); return; }
+    if (p1 !== p2) { notify('resetCodeNotify', 'Lykilorðin eru ekki eins.', 'error'); return; }
+    if (p1.length < 8) { notify('resetCodeNotify', 'Lykilorð verður að vera að minnsta kosti 8 stafir.', 'error'); return; }
+    try {
+      const hash = await hashPassword(p1);
+      const res = await fetch(FLOW_STADFESTA_RESET, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ Notandi: pendingEmail, Kodi: kodi, Lykilord: hash })
+      });
+      const data = await res.json();
+      if (data.error) { notify('resetCodeNotify', 'Rangur kóði. Reyndu aftur.', 'error'); return; }
+      document.getElementById('resetCodePanel').style.display = 'none';
+      document.getElementById('loginPanel').style.display = 'block';
+      notify('loginNotify', 'Lykilorð hefur verið endurstillt. Skráðu þig inn.', 'success');
+    } catch(e) {
+      notify('resetCodeNotify', 'Villa við að endurstilla lykilorð. Reyndu aftur.', 'error');
+      console.error(e);
+    }
+  }
+
+  restoreSession();
+</script>
 </body>
 </html>
