@@ -319,21 +319,8 @@
     .section-title:first-child { margin-top: 0; }
     .section-title [data-lucide] { color: var(--elko-green); }
 
-    .kpi-row { margin-bottom: 12px; }
-    .kpi-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-card);
-      padding: 18px 24px;
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 8px 20px;
-    }
-    .kpi-label { font-size: 13px; font-weight: 600; color: var(--text-secondary); flex: 1 1 200px; }
-    .kpi-number { font-size: 28px; font-weight: 700; color: var(--stat-number); }
-    .kpi-sub { font-size: 12px; color: var(--text-muted); flex-basis: 100%; }
+    .subsection-label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin: 14px 0 8px; text-transform: uppercase; letter-spacing: 0.02em; }
+    .subsection-label:first-of-type { margin-top: 4px; }
   </style>
 </head>
 <body>
@@ -1070,38 +1057,43 @@
 
       const diff = (a, b) => b === 0 ? '' : ` <span style="font-size:11px; color:${a >= b ? 'var(--badge-success-text)' : 'var(--badge-danger-text)'}">${a >= b ? '▲' : '▼'} ${Math.abs(a - b)}</span>`;
 
+      const astaedaList = ['Þjófnaður', 'Gallað', 'Ósöluhæft', 'Lagerleiðrétting'];
+      const countByAstaedaInRange = (from, to) => {
+        const result = {};
+        astaedaList.forEach(a => result[a] = 0);
+        items.forEach(i => {
+          const d = (i.Dagsetning || '').split('T')[0];
+          const a = i.OData__x00c1_st_x00e6__x00f0_a?.Value || i.Astæda || '';
+          if (d >= from && d <= to && astaedaList.includes(a)) result[a]++;
+        });
+        return result;
+      };
+      const mtdThisByAstaeda = countByAstaedaInRange(toISO(startOfThisMonth), today);
+      const mtdLastByAstaeda = countByAstaedaInRange(toISO(startOfLastMonth), toISO(lastMonthCutoff));
+      const ytdThisByAstaeda = countByAstaedaInRange(toISO(startOfThisYear), today);
+      const ytdLastByAstaeda = countByAstaedaInRange(toISO(startOfLastYear), toISO(lastYearCutoff));
+
       panel.innerHTML = `
         <h3 class="section-title"><i data-lucide="bar-chart-3"></i>Yfirlit</h3>
-
-        <div class="kpi-row">
-          <div class="kpi-card">
-            <div class="kpi-label">MTD — það sem af er mánuði</div>
-            <div class="kpi-number">${mtdThis}${diff(mtdThis, mtdLast)}</div>
-            <div class="kpi-sub">Sami dagafjöldi í síðasta mánuði: ${mtdLast}</div>
-          </div>
-        </div>
-        <div class="kpi-row">
-          <div class="kpi-card">
-            <div class="kpi-label">YTD — það sem af er ári</div>
-            <div class="kpi-number">${ytdThis}${diff(ytdThis, ytdLast)}</div>
-            <div class="kpi-sub">Sama tímabil í fyrra: ${ytdLast}</div>
-          </div>
-        </div>
-        <div class="kpi-row">
-          <div class="kpi-card">
-            <div class="kpi-label">Frá upphafi (alltime)</div>
-            <div class="kpi-number">${allTimeCount}</div>
-            <div class="kpi-sub">Samtals allar tilkynningar í kerfinu</div>
-          </div>
-        </div>
-
-        <div class="stats-grid" style="margin-top:16px;">
+        <div class="stats-grid">
           <div class="stat-card"><div class="number">${todayCount}</div><div class="label">Í dag</div></div>
           <div class="stat-card"><div class="number">${weekCount}</div><div class="label">Síðustu 7 dagar</div></div>
+          <div class="stat-card"><div class="number">${mtdThis}${diff(mtdThis, mtdLast)}</div><div class="label">Þessi mánuður vs síðasti (${mtdLast})</div></div>
+          <div class="stat-card"><div class="number">${ytdThis}${diff(ytdThis, ytdLast)}</div><div class="label">Þetta ár vs í fyrra (${ytdLast})</div></div>
+          <div class="stat-card"><div class="number">${allTimeCount}</div><div class="label">Samtals tilkynningar</div></div>
         </div>
         <h3 class="section-title"><i data-lucide="list-tree"></i>Eftir ástæðu</h3>
+        <div class="subsection-label">MTD — það sem af er mánuði</div>
         <div class="stats-grid">
-          ${Object.entries(byAstæda).map(([k, v]) => `<div class="stat-card"><div class="number">${v}</div><div class="label">${k}</div></div>`).join('')}
+          ${astaedaList.map(a => `<div class="stat-card"><div class="number">${mtdThisByAstaeda[a]}${diff(mtdThisByAstaeda[a], mtdLastByAstaeda[a])}</div><div class="label">${a}</div></div>`).join('')}
+        </div>
+        <div class="subsection-label">YTD — það sem af er ári</div>
+        <div class="stats-grid">
+          ${astaedaList.map(a => `<div class="stat-card"><div class="number">${ytdThisByAstaeda[a]}${diff(ytdThisByAstaeda[a], ytdLastByAstaeda[a])}</div><div class="label">${a}</div></div>`).join('')}
+        </div>
+        <div class="subsection-label">Frá upphafi (alltime)</div>
+        <div class="stats-grid">
+          ${astaedaList.map(a => `<div class="stat-card"><div class="number">${byAstæda[a] || 0}</div><div class="label">${a}</div></div>`).join('')}
         </div>
         <h3 class="section-title"><i data-lucide="store"></i>Eftir verslun</h3>
         <div class="stats-grid">
