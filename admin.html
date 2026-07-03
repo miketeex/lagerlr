@@ -69,6 +69,27 @@
 
     body.embedded .page-header { display: none; }
 
+    #syncIndicator {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 3000;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 7px 14px;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      box-shadow: var(--shadow-sm);
+    }
+    #syncIndicator.active { display: flex; }
+    #syncIndicator [data-lucide] { width: 13px; height: 13px; color: var(--elko-green); animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
     .elko-btn {
       background: var(--elko-green);
       color: white;
@@ -319,6 +340,11 @@
   </div>
 </div>
 
+<div id="syncIndicator">
+  <i data-lucide="loader-circle"></i>
+  <span>Sæki gögn...</span>
+</div>
+
 <div id="loginPanel">
   <div class="login-wrap">
     <h2>Innskráning</h2>
@@ -421,6 +447,15 @@
   const TILKYNNINGAR_PAGE_SIZE = 20;
   let tilkynningarSort = { key: null, dir: 1 };
   let tilkynningarColumnFilters = {};
+
+  function showSync() {
+    const el = document.getElementById('syncIndicator');
+    if (el) { el.classList.add('active'); if (window.lucide) lucide.createIcons(); }
+  }
+  function hideSync() {
+    const el = document.getElementById('syncIndicator');
+    if (el) el.classList.remove('active');
+  }
 
   function getTkField(r, key) {
     switch (key) {
@@ -631,6 +666,8 @@
 
     if (!silent || !skeletonExists) {
       panel.innerHTML = '<p style="padding:20px;">Hleður tilkynningar...</p>';
+    } else {
+      showSync();
     }
 
     try {
@@ -745,9 +782,15 @@
       renderRedFlags(items);
       renderTilkynningar(items);
       if (window.lucide) lucide.createIcons();
+      hideSync();
 
     } catch(e) {
-      panel.innerHTML = '<p style="padding:20px; color:var(--danger, #E05353);">Villa við að sækja tilkynningar.</p>';
+      if (silent && skeletonExists) {
+        hideSync();
+        notify('dashNotify', 'Villa við að sækja tilkynningar.', 'error');
+      } else {
+        panel.innerHTML = '<p style="padding:20px; color:var(--danger, #E05353);">Villa við að sækja tilkynningar.</p>';
+      }
       console.error(e);
     }
   }
@@ -932,6 +975,8 @@
     const hasContent = panel.querySelector('.stats-grid');
     if (!hasContent) {
       panel.innerHTML = '<p style="padding:20px;">Hleður tölfræði...</p>';
+    } else {
+      showSync();
     }
 
     try {
@@ -1047,9 +1092,15 @@
           </div>`;
         })()}`;
       if (window.lucide) lucide.createIcons();
+      hideSync();
 
     } catch(e) {
-      panel.innerHTML = '<p style="padding:20px; color:var(--danger, #E05353);">Villa við að sækja tölfræði.</p>';
+      if (hasContent) {
+        hideSync();
+        notify('dashNotify', 'Villa við að sækja tölfræði.', 'error');
+      } else {
+        panel.innerHTML = '<p style="padding:20px; color:var(--danger, #E05353);">Villa við að sækja tölfræði.</p>';
+      }
       console.error(e);
     }
   }
@@ -1059,6 +1110,8 @@
     const hasContent = panel.querySelector('.elko-table-wrap');
     if (!hasContent) {
       panel.innerHTML = '<p style="padding:20px;">Hleður notendur...</p>';
+    } else {
+      showSync();
     }
 
     try {
@@ -1172,9 +1225,15 @@
           </table>
         </div>`;
       if (window.lucide) lucide.createIcons();
+      hideSync();
 
     } catch(e) {
-      panel.innerHTML = '<p style="padding:20px; color:var(--danger, #E05353);">Villa við að sækja notendur.</p>';
+      if (hasContent) {
+        hideSync();
+        notify('dashNotify', 'Villa við að sækja notendur.', 'error');
+      } else {
+        panel.innerHTML = '<p style="padding:20px; color:var(--danger, #E05353);">Villa við að sækja notendur.</p>';
+      }
       console.error(e);
     }
   }
