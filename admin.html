@@ -620,6 +620,7 @@
   const FLOW_BAETA_VID_VIDHENGI = PROXY + '/baeta-vid-vidhengi';
   const FLOW_EYDA_VIDHENGI = PROXY + '/eyda-vidhengi';
   const FLOW_VIDHENGI_INNIHALD = PROXY + '/vidhengi-innihald';
+  const FLOW_TILKYNNINGAR_ARCHIVE = PROXY + '/tilkynningar-archive';
   const FLOW_UPPFAERA_ATHUGASEMD = PROXY + '/uppfaera-athugasemd';
   const FLOW_EYDA_ATHUGASEMD = PROXY + '/eyda-athugasemd';
 
@@ -628,6 +629,23 @@
   let tilkynningarPage = 1;
   const TILKYNNINGAR_PAGE_SIZE = 20;
   let tilkynningarSort = { key: null, dir: 1 };
+  let isArchiveView = false;
+
+  async function fetchArchiveRaw() {
+    const res = await fetch(FLOW_TILKYNNINGAR_ARCHIVE, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    const data = await res.json();
+    return data.value || data;
+  }
+
+  function toggleArchiveView() {
+    isArchiveView = !isArchiveView;
+    tilkynningarPage = 1;
+    loadTilkynningar(true, false);
+  }
   let tilkynningarColumnFilters = {};
 
   function showSync() {
@@ -1280,7 +1298,7 @@
     }
 
     try {
-      let items = await fetchTilkynningarRaw(forceRefresh);
+      let items = isArchiveView ? await fetchArchiveRaw() : await fetchTilkynningarRaw(forceRefresh);
       await fetchAthugasemdirRaw(forceRefresh);
 
       const role = currentUser?.Hlutverk?.Value || currentUser?.Hlutverk || '';
@@ -1341,6 +1359,8 @@
               <option>Lagerleiðrétting</option>
             </select>
             <button class="elko-btn elko-btn-secondary elko-btn-sm" onclick="loadTilkynningar(true, true, true)"><i data-lucide="refresh-cw" style="width:14px; height:14px;"></i> Uppfæra</button>
+            <button class="elko-btn elko-btn-secondary elko-btn-sm" onclick="toggleArchiveView()"><i data-lucide="archive" style="width:14px; height:14px;"></i> ${isArchiveView ? 'Til baka í virk mál' : 'Skoða eldri mál'}</button>
+            ${isArchiveView ? '<span style="font-size:12px; color:var(--text-muted); display:flex; align-items:center;">Skoðar geymd/lokuð mál (eldri en 2 ár) — lesham</span>' : ''}
           </div>
           <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
             <div style="background:var(--badge-info-bg); border-radius:var(--radius-btn); padding:8px 16px; font-size:13px; font-weight:600; color:var(--badge-info-text); display:flex; align-items:center; gap:8px;"><span style="width:8px; height:8px; border-radius:50%; background:#2D9CDB; display:inline-block;"></span><span id="countNy">Ný: ${nyCount}</span></div>
@@ -1361,7 +1381,7 @@
                   <th class="sortable-th" onclick="sortTilkynningarBy('dagsetning')">Dagsetning <span class="sort-arrow" id="sortArrow-dagsetning"></span></th>
                   <th class="sortable-th" onclick="sortTilkynningarBy('stada')">Staða <span class="sort-arrow" id="sortArrow-stada"></span></th>
                   <th class="sortable-th" onclick="sortTilkynningarBy('breytt')">Breytt <span class="sort-arrow" id="sortArrow-breytt"></span></th>
-                  ${['Lagerstjóri', 'Master'].includes(role) ? '<th>Aðgerð</th>' : ''}
+                  ${['Lagerstjóri', 'Master'].includes(role) && !isArchiveView ? '<th>Aðgerð</th>' : ''}
                 </tr>
                 <tr class="filter-row-th">
                   <th><input class="col-filter-input" oninput="setColumnFilter('tilvisun', this.value)" placeholder="Sía..."></th>
@@ -1374,7 +1394,7 @@
                   <th><input class="col-filter-input" oninput="setColumnFilter('dagsetning', this.value)" placeholder="Sía..."></th>
                   <th><input class="col-filter-input" oninput="setColumnFilter('stada', this.value)" placeholder="Sía..."></th>
                   <th><input class="col-filter-input" oninput="setColumnFilter('breytt', this.value)" placeholder="Sía..."></th>
-                  ${['Lagerstjóri', 'Master'].includes(role) ? '<th></th>' : ''}
+                  ${['Lagerstjóri', 'Master'].includes(role) && !isArchiveView ? '<th></th>' : ''}
                 </tr>
               </thead>
               <tbody id="tilkynningarBody"></tbody>
@@ -1385,7 +1405,12 @@
 
       window._allTilkynningar = items;
       if (resetPage) tilkynningarPage = 1;
-      renderRedFlags(items);
+      if (isArchiveView) {
+        const existing = document.getElementById('redFlagsSection');
+        if (existing) existing.remove();
+      } else {
+        renderRedFlags(items);
+      }
       renderTilkynningar(items);
       if (window.lucide) lucide.createIcons();
       hideSync();
@@ -1517,7 +1542,7 @@
         <td>${dagur}</td>
         <td><span class="stada-badge stada-${stada.replace(' ', '.')}">${stada}</span></td>
         <td style="font-size:12px; color:var(--text-muted);" title="${r.BreyttAf ? 'Breytt af: ' + r.BreyttAf : ''}">${breytt}${r.BreyttAf ? ` <span style="color:var(--text-secondary);">(${r.BreyttAf})</span>` : ''}</td>
-        ${['Lagerstjóri', 'Master'].includes(role) ? `
+        ${['Lagerstjóri', 'Master'].includes(role) && !isArchiveView ? `
         <td>
           <select onchange="updateStada(${r.ID}, this.value)" style="padding:5px 8px; border:1px solid var(--border); border-radius:8px; font-size:12px; font-family:inherit; background:var(--surface); color:var(--text-primary);">
             <option value="">-- Breyta --</option>
@@ -1530,7 +1555,7 @@
     }).join('');
 
     renderTilkynningarPagination(items.length);
-    loadAttachmentCountsForPage(pageItems);
+    if (!isArchiveView) loadAttachmentCountsForPage(pageItems);
     updateSortArrows();
     if (window.lucide) lucide.createIcons();
   }
