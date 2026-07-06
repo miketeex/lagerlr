@@ -631,14 +631,24 @@
   let tilkynningarSort = { key: null, dir: 1 };
   let isArchiveView = false;
 
-  async function fetchArchiveRaw() {
+  let archiveRawCache = null;
+  let archiveRawCacheTime = 0;
+
+  async function fetchArchiveRaw(forceRefresh = false) {
+    const now = Date.now();
+    if (!forceRefresh && archiveRawCache && (now - archiveRawCacheTime) < TILKYNNINGAR_CACHE_TTL_MS) {
+      return archiveRawCache;
+    }
     const res = await fetch(FLOW_TILKYNNINGAR_ARCHIVE, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({})
     });
     const data = await res.json();
-    return data.value || data;
+    const items = data.value || data;
+    archiveRawCache = items;
+    archiveRawCacheTime = now;
+    return items;
   }
 
   function toggleArchiveView() {
@@ -1298,7 +1308,7 @@
     }
 
     try {
-      let items = isArchiveView ? await fetchArchiveRaw() : await fetchTilkynningarRaw(forceRefresh);
+      let items = isArchiveView ? await fetchArchiveRaw(forceRefresh) : await fetchTilkynningarRaw(forceRefresh);
       await fetchAthugasemdirRaw(forceRefresh);
 
       const role = currentUser?.Hlutverk?.Value || currentUser?.Hlutverk || '';
@@ -1617,7 +1627,11 @@
     }
 
     try {
-      let items = await fetchTilkynningarRaw(false);
+      const [liveItems, archiveItems] = await Promise.all([
+        fetchTilkynningarRaw(false),
+        fetchArchiveRaw(false)
+      ]);
+      let items = [...liveItems, ...archiveItems];
 
       const role = currentUser?.Hlutverk?.Value || currentUser?.Hlutverk || '';
       const verslun = currentUser?.Verslun || '';
@@ -1713,7 +1727,7 @@
           <div class="stat-card"><div class="number">${weekCount}</div><div class="label">Síðustu 7 dagar</div></div>
           <div class="stat-card"><div class="number">${mtdThis}${diff(mtdThis, mtdLast)}</div><div class="label">Þessi mánuður vs síðasti (${mtdLast})</div></div>
           <div class="stat-card"><div class="number">${ytdThis}${diff(ytdThis, ytdLast)}</div><div class="label">Þetta ár vs í fyrra (${ytdLast})</div></div>
-          <div class="stat-card"><div class="number">${allTimeCount}</div><div class="label">Samtals tilkynningar</div></div>
+          <div class="stat-card"><div class="number">${allTimeCount}</div><div class="label">Samtals tilkynningar (m.t. archive)</div></div>
         </div>
         <h3 class="section-title"><i data-lucide="list-tree"></i>Eftir ástæðu</h3>
         <div class="subsection-label">MTD — það sem af er mánuði</div>
