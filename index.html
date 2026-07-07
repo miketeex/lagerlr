@@ -418,6 +418,8 @@
     return left.padStart(10, '0') + right.padStart(9, '0');
   }
 
+  let searchRequestId = 0;
+
   function searchProducts(query) {
     clearTimeout(searchTimeout);
     selectedVara = '';
@@ -428,6 +430,12 @@
       document.getElementById('autocompleteList').classList.remove('active');
       return;
     }
+
+    const list = document.getElementById('autocompleteList');
+    list.innerHTML = `<div class="autocomplete-item" style="color:var(--text-muted); cursor:default;">Leita...</div>`;
+    list.classList.add('active');
+
+    const thisRequestId = ++searchRequestId;
 
     searchTimeout = setTimeout(async () => {
       try {
@@ -452,6 +460,8 @@
         const responses = await Promise.all(fetches);
         const jsons = await Promise.all(responses.map(r => r.json()));
 
+        if (thisRequestId !== searchRequestId) return;
+
         let raw = (jsons[0].value || jsons[0]).map(i => ({ ...i, _eol: false }));
         if (includeEol && jsons[1]) {
           raw = raw.concat((jsons[1].value || jsons[1]).map(i => ({ ...i, _eol: true })));
@@ -468,9 +478,12 @@
         }).slice(0, 20);
         renderAutocomplete(items);
       } catch(e) {
+        if (thisRequestId === searchRequestId) {
+          list.innerHTML = `<div class="autocomplete-item" style="color:var(--danger, #E05353); cursor:default;">Villa við leit — reyndu aftur</div>`;
+        }
         console.error(e);
       }
-    }, 300);
+    }, 250);
   }
 
   function renderAutocomplete(items) {
