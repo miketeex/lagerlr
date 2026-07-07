@@ -12,7 +12,7 @@
     --primary: #78A22F;
     --primary-hover: #689326;
     --primary-light: #A6CF54;
-    
+
     --bg: #F5F7FA;
     --surface: #fff;
     --card: #fff;
@@ -247,6 +247,10 @@
           <div class="autocomplete-list" id="autocompleteList"></div>
         </div>
         <div class="vara-desc" id="varaDesc"></div>
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:400; font-size:12px; color:var(--text-secondary); margin-top:8px;">
+          <input type="checkbox" id="includeEol" onchange="searchProducts(document.getElementById('vorunumer').value)" style="width:auto;">
+          Sýna líka hættar vörur (EOL)
+        </label>
       </div>
 
       <div class="field">
@@ -330,6 +334,7 @@
 
   const PROXY = 'https://lagerlr-proxy.pruins.workers.dev/api';
   const FLOW_VORULIST = PROXY + '/vorulisti';
+  const FLOW_VORULISTI_ARCHIVE = PROXY + '/vorulisti-archive';
   const FLOW_SUBMIT = PROXY + '/senda-tilkynningu';
   const FLOW_BAETA_VID_VIDHENGI = PROXY + '/baeta-vid-vidhengi';
 
@@ -426,18 +431,38 @@
 
     searchTimeout = setTimeout(async () => {
       try {
-        const res = await fetch(FLOW_VORULIST, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ Query: query.trim().split(/\s+/)[0] })
-        });
-        const data = await res.json();
-        const raw = data.value || data;
+        const includeEol = document.getElementById('includeEol').checked;
+        const queryFirstWord = query.trim().split(/\s+/)[0];
+
+        const fetches = [
+          fetch(FLOW_VORULIST, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ Query: queryFirstWord })
+          })
+        ];
+        if (includeEol) {
+          fetches.push(fetch(FLOW_VORULISTI_ARCHIVE, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ Query: queryFirstWord })
+          }));
+        }
+
+        const responses = await Promise.all(fetches);
+        const jsons = await Promise.all(responses.map(r => r.json()));
+
+        let raw = (jsons[0].value || jsons[0]).map(i => ({ ...i, _eol: false }));
+        if (includeEol && jsons[1]) {
+          raw = raw.concat((jsons[1].value || jsons[1]).map(i => ({ ...i, _eol: true })));
+        }
+
         const words = query.toLowerCase().trim().split(/\s+/);
         const seen = new Set();
         const items = raw.filter(i => {
-          if (seen.has(i.Title)) return false;
-          seen.add(i.Title);
+          const key = i.Title + (i._eol ? '-eol' : '');
+          if (seen.has(key)) return false;
+          seen.add(key);
           const searchText = ((i.Title || '') + ' ' + (i.Vara || '')).toLowerCase();
           return words.every(w => searchText.includes(w));
         }).slice(0, 20);
@@ -456,17 +481,15 @@
     }
 
     items.sort((a, b) => {
-      const aEol = (a.Vara || '').includes('#');
-      const bEol = (b.Vara || '').includes('#');
-      if (aEol && !bEol) return 1;
-      if (!aEol && bEol) return -1;
+      if (a._eol && !b._eol) return 1;
+      if (!a._eol && b._eol) return -1;
       return 0;
     });
 
     list.innerHTML = items.map((item, idx) => {
-      const isEol = (item.Vara || '').includes('#');
+      const isEol = !!item._eol;
       return `<div class="autocomplete-item${isEol ? ' eol' : ''}" data-idx="${idx}">
-        ${item.Title} <span>${item.Vara || ''}${isEol ? ' <i data-lucide="triangle-alert" style="width:12px; height:12px; color:#F4B740; vertical-align:-2px;"></i>' : ''}</span>
+        ${item.Title} <span>${item.Vara || ''}${isEol ? ' <i data-lucide="triangle-alert" style="width:12px; height:12px; color:#F4B740; vertical-align:-2px;"></i> Hætt' : ''}</span>
       </div>`;
     }).join('');
 
