@@ -1246,9 +1246,9 @@
     document.getElementById('setPasswordPanel').style.display = 'none';
     document.getElementById('dashboard').style.display = 'block';
     document.getElementById('headerUser').style.display = 'flex';
-    document.getElementById('headerUserName').textContent = currentUser.Title;
+    document.getElementById('headerUserName').textContent = currentUser.Nafn || currentUser.Title;
     document.getElementById('headerUserRole').textContent = currentUser.Hlutverk?.Value || currentUser.Hlutverk || '';
-    document.getElementById('headerAvatar').textContent = (currentUser.Title || '?').slice(0, 2).toUpperCase();
+    document.getElementById('headerAvatar').textContent = getInitials(currentUser.Nafn || currentUser.Title);
     buildDashboard();
     if (window.lucide) lucide.createIcons();
   }
@@ -1288,6 +1288,15 @@
     if (tab === 'tilkynningar') loadTilkynningar(true, true);
     if (tab === 'stats') loadStats();
     if (tab === 'notendur') loadNotendur();
+  }
+
+  function getInitials(text) {
+    if (!text) return '?';
+    const parts = text.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return text.slice(0, 2).toUpperCase();
   }
 
   function getVidList(vidbotar) {
@@ -1904,11 +1913,12 @@
           <table>
             <thead>
               <tr>
-                <th>Netfang</th><th>Hlutverk</th><th>Verslun</th><th>Viðbótarverslun</th><th>Lykilorð sett</th><th>Aðgerð</th>
+                <th>Nafn</th><th>Netfang</th><th>Hlutverk</th><th>Verslun</th><th>Viðbótarverslun</th><th>Lykilorð sett</th><th>Aðgerð</th>
               </tr>
             </thead>
             <tbody>
               ${items.map(u => `<tr>
+                <td>${u.Nafn ? u.Nafn : '<span style="color:var(--text-muted); font-style:italic;">Ósamstillt</span>'}</td>
                 <td>${u.Title || ''}</td>
                 <td>${u.Hlutverk?.Value || u.Hlutverk || ''}</td>
                 <td>${u.Verslun || ''}</td>
